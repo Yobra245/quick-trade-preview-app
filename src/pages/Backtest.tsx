@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,7 +15,7 @@ import {
   ArrowRight,
   Sliders,
   Download,
-  LineChart,
+  LineChart as LineChartIcon,
   BarChart4
 } from "lucide-react";
 import {
@@ -130,6 +129,11 @@ const Backtest = () => {
   
   const formatPercentage = (value: number) => {
     return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
+  };
+
+  // Helper function to determine bar color based on return value
+  const getBarColor = (value: number) => {
+    return value >= 0 ? "#22c55e" : "#ef4444";
   };
 
   return (
@@ -322,7 +326,7 @@ const Backtest = () => {
             {!hasResults ? (
               <div className="flex items-center justify-center h-96 bg-gray-900/50 rounded-lg border border-gray-800">
                 <div className="text-center p-8">
-                  <LineChart className="h-12 w-12 text-gray-500 mx-auto mb-4" />
+                  <LineChartIcon className="h-12 w-12 text-gray-500 mx-auto mb-4" />
                   <h3 className="text-xl font-medium text-gray-400 mb-2">Backtest Results</h3>
                   <p className="text-gray-500 max-w-md">
                     Configure your backtest parameters and click 'Run Backtest' to see your strategy's performance.
@@ -427,9 +431,13 @@ const Backtest = () => {
                               />
                               <Bar 
                                 dataKey="return" 
-                                fill={(data) => data.return >= 0 ? '#22c55e' : '#ef4444'}
-                                radius={[4, 4, 0, 0]}
-                              />
+                                fill="#3b82f6"
+                                className="fill-current"
+                              >
+                                {mockBacktestResults.monthlyReturns.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.return >= 0 ? "#22c55e" : "#ef4444"} />
+                                ))}
+                              </Bar>
                             </BarChart>
                           </ResponsiveContainer>
                         </div>
