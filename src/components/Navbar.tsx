@@ -1,11 +1,17 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Search, Bell, User, Settings } from "lucide-react";
+import { Link, useLocation } from 'react-router-dom';
+import { Search, Bell, User, Settings, ChartLine, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 const Navbar = () => {
+  const location = useLocation();
+  
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+  
   return (
     <nav className="border-b border-gray-800 px-4 py-2 w-full bg-black/20 backdrop-blur-md fixed top-0 left-0 right-0 z-50">
       <div className="flex items-center justify-between">
@@ -14,7 +20,30 @@ const Navbar = () => {
           <span className="hidden md:inline-flex text-xs font-semibold bg-secondary px-2 py-0.5 rounded">BETA</span>
         </div>
         
-        <div className="hidden md:flex flex-1 max-w-md mx-4">
+        <div className="hidden md:flex items-center gap-4 mx-4">
+          <Link to="/" className={`text-sm font-medium ${isActive('/') ? 'text-primary' : 'text-gray-400 hover:text-white'}`}>
+            <span className="flex items-center gap-1">
+              <Home className="h-4 w-4" />
+              Dashboard
+            </span>
+          </Link>
+          
+          <Link to="/backtest" className={`text-sm font-medium ${isActive('/backtest') ? 'text-primary' : 'text-gray-400 hover:text-white'}`}>
+            <span className="flex items-center gap-1">
+              <ChartLine className="h-4 w-4" />
+              Backtest
+            </span>
+          </Link>
+          
+          <Link to="/settings" className={`text-sm font-medium ${isActive('/settings') ? 'text-primary' : 'text-gray-400 hover:text-white'}`}>
+            <span className="flex items-center gap-1">
+              <Settings className="h-4 w-4" />
+              Settings
+            </span>
+          </Link>
+        </div>
+        
+        <div className="hidden lg:flex flex-1 max-w-md mx-4">
           <div className="relative w-full">
             <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
