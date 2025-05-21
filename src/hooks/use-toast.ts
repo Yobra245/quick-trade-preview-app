@@ -1,3 +1,4 @@
+
 import * as React from "react"
 
 import type {
@@ -5,7 +6,7 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 1
+const TOAST_LIMIT = 10
 const TOAST_REMOVE_DELAY = 1000000
 
 type ToasterToast = ToastProps & {
@@ -25,7 +26,7 @@ const actionTypes = {
 let count = 0
 
 function genId() {
-  count = (count + 1) % Number.MAX_SAFE_INTEGER
+  count = (count + 1) % Number.MAX_VALUE
   return count.toString()
 }
 
@@ -90,8 +91,6 @@ export const reducer = (state: State, action: Action): State => {
     case "DISMISS_TOAST": {
       const { toastId } = action
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
       if (toastId) {
         addToRemoveQueue(toastId)
       } else {
@@ -112,6 +111,7 @@ export const reducer = (state: State, action: Action): State => {
         ),
       }
     }
+
     case "REMOVE_TOAST":
       if (action.toastId === undefined) {
         return {
@@ -142,7 +142,7 @@ type Toast = Omit<ToasterToast, "id">
 function toast({ ...props }: Toast) {
   const id = genId()
 
-  const update = (props: ToasterToast) =>
+  const update = (props: Toast) =>
     dispatch({
       type: "UPDATE_TOAST",
       toast: { ...props, id },
@@ -162,7 +162,7 @@ function toast({ ...props }: Toast) {
   })
 
   return {
-    id: id,
+    id,
     dismiss,
     update,
   }
@@ -187,5 +187,49 @@ function useToast() {
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
   }
 }
+
+// Utility functions to make toast usage easier
+toast.success = (title: string, description?: string) => {
+  return toast({
+    title,
+    description,
+    className: "bg-green-50 text-green-900 dark:bg-green-900/20 dark:text-green-50",
+  });
+};
+
+toast.error = (title: string, description?: string) => {
+  return toast({
+    title,
+    description,
+    variant: "destructive",
+  });
+};
+
+toast.info = (title: string, description?: string) => {
+  return toast({
+    title,
+    description,
+    className: "bg-blue-50 text-blue-900 dark:bg-blue-900/20 dark:text-blue-50",
+  });
+};
+
+toast.warning = (title: string, description?: string) => {
+  return toast({
+    title,
+    description,
+    className: "bg-yellow-50 text-yellow-900 dark:bg-yellow-900/20 dark:text-yellow-50",
+  });
+};
+
+toast.loading = (title: string, description?: string) => {
+  return toast({
+    title,
+    description,
+    className: "relative pl-8",
+    beforeContent: (
+      <div className="absolute left-2.5 top-3 animate-spin rounded-full h-4 w-4 border-2 border-primary border-r-transparent" />
+    ),
+  });
+};
 
 export { useToast, toast }
