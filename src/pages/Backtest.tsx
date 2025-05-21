@@ -396,7 +396,7 @@ const Backtest = () => {
                       <ArrowRight className="mr-2 h-4 w-4" />
                       Recent Trades
                     </TabsTrigger>
-                  </Tabs>
+                  </TabsList>
                   
                   <TabsContent value="monthly">
                     <Card>
