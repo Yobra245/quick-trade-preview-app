@@ -39,6 +39,13 @@ const PerformanceCard: React.FC<PerformanceCardProps> = ({ data }) => {
     },
   };
 
+  // Fixed formatter function to safely check if the name exists and handle undefined cases
+  const labelFormatter = (value: number, name: string) => {
+    if (name === "P. Factor") return (value / 10).toFixed(1);
+    if (name === "Avg. Profit" || name === "Avg. Loss") return (value / 5).toFixed(1) + '%';
+    return value.toFixed(1) + '%';
+  };
+
   return (
     <Card className="bg-black/40 border border-gray-800">
       <CardHeader className="border-b border-gray-800 py-3 px-4">
@@ -101,10 +108,15 @@ const PerformanceCard: React.FC<PerformanceCardProps> = ({ data }) => {
                   position="top" 
                   fill="#9ca3af"
                   fontSize={10}
-                  formatter={(v: number, n: any) => {
-                    if (n.name === "P. Factor") return (v / 10).toFixed(1);
-                    if (n.name === "Avg. Profit" || n.name === "Avg. Loss") return (v / 5).toFixed(1) + '%';
-                    return v.toFixed(1) + '%';
+                  // Fixed: Use the proper formatter function with explicit typing
+                  formatter={(value: number, entry: any) => {
+                    // Safety check to ensure entry and entry.payload exist
+                    if (!entry || !entry.payload || !entry.payload.name) {
+                      return value.toFixed(1) + '%'; // Default fallback
+                    }
+                    
+                    const name = entry.payload.name;
+                    return labelFormatter(value, name);
                   }}
                 />
               </Bar>
