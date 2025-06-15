@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { AppSidebar } from './AppSidebar';
 import Breadcrumb from './Breadcrumb';
-import { SidebarInset, SidebarProvider, SidebarRail } from './ui/sidebar';
+import { SidebarInset, SidebarProvider } from './ui/sidebar';
 import { useAppContext } from '@/contexts/AppContext';
 import ApiKeyModal from './ApiKeyModal';
 import { toast } from './ui/use-toast';
@@ -35,7 +35,6 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
-        <SidebarRail />
         <SidebarInset className="pt-6">
           <div className="container mx-auto px-4">
             <Breadcrumb className="mb-6" />

@@ -2,11 +2,15 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Bell, Check, CheckCheck, AlertTriangle, TrendingUp, Settings, Zap } from 'lucide-react';
 import { useNotifications } from '@/hooks/useNotifications';
 import { formatDistanceToNow } from 'date-fns';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const NotificationCenter = () => {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
@@ -46,35 +50,38 @@ const NotificationCenter = () => {
   };
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
-            Notifications
-            {unreadCount > 0 && (
-              <Badge variant="default" className="ml-1">
-                {unreadCount}
-              </Badge>
-            )}
-          </CardTitle>
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" className="relative">
+          <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={markAllAsRead}
-              className="flex items-center gap-1"
+            <Badge 
+              variant="destructive" 
+              className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
             >
-              <CheckCheck className="h-3 w-3" />
-              Mark all read
-            </Button>
+              {unreadCount}
+            </Badge>
           )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-0" align="end">
+        <div className="p-4 border-b">
+          <div className="flex items-center justify-between">
+            <h3 className="font-semibold">Notifications</h3>
+            {unreadCount > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={markAllAsRead}
+                className="flex items-center gap-1 h-8"
+              >
+                <CheckCheck className="h-3 w-3" />
+                Mark all read
+              </Button>
+            )}
+          </div>
         </div>
-        <CardDescription>
-          Stay updated with your trading activity and alerts
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="p-0">
+        
         <ScrollArea className="h-96">
           {notifications.length === 0 ? (
             <div className="p-4 text-center text-muted-foreground">
@@ -131,8 +138,8 @@ const NotificationCenter = () => {
             </div>
           )}
         </ScrollArea>
-      </CardContent>
-    </Card>
+      </PopoverContent>
+    </Popover>
   );
 };
 
