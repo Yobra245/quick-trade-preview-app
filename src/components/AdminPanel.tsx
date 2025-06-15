@@ -114,6 +114,21 @@ const AdminPanel = () => {
     }
   };
 
+  const getEnvironmentValue = (exchange: string, config: any) => {
+    if (exchange === 'coinbase') {
+      return config.sandbox ? 'sandbox' : 'production';
+    }
+    return config.testnet ? 'testnet' : 'production';
+  };
+
+  const handleEnvironmentChange = (exchange: string, value: string) => {
+    if (exchange === 'coinbase') {
+      handleExchangeConfigUpdate(exchange, 'sandbox', value === 'sandbox');
+    } else {
+      handleExchangeConfigUpdate(exchange, 'testnet', value === 'testnet');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -207,14 +222,8 @@ const AdminPanel = () => {
                   <div className="space-y-2">
                     <Label>Environment</Label>
                     <Select
-                      value={exchange === 'coinbase' ? ((config as any).sandbox ? 'sandbox' : 'production') : (config.testnet ? 'testnet' : 'production')}
-                      onValueChange={(value) => 
-                        handleExchangeConfigUpdate(
-                          exchange, 
-                          exchange === 'coinbase' ? 'sandbox' : 'testnet', 
-                          value === 'sandbox' || value === 'testnet'
-                        )
-                      }
+                      value={getEnvironmentValue(exchange, config)}
+                      onValueChange={(value) => handleEnvironmentChange(exchange, value)}
                     >
                       <SelectTrigger>
                         <SelectValue />
