@@ -10,6 +10,7 @@ import Settings from "./pages/Settings";
 import Backtest from "./pages/Backtest";
 import NotFound from "./pages/NotFound";
 import MainLayout from "./components/MainLayout";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { AppProvider } from "./contexts/AppContext";
 
 const queryClient = new QueryClient({
@@ -17,29 +18,33 @@ const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
       staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 3,
+      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
     },
   },
 });
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <AppProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<MainLayout><Index /></MainLayout>} />
-              <Route path="/settings" element={<MainLayout><Settings /></MainLayout>} />
-              <Route path="/backtest" element={<MainLayout><Backtest /></MainLayout>} />
-              <Route path="*" element={<MainLayout><NotFound /></MainLayout>} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AppProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <AppProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<MainLayout><Index /></MainLayout>} />
+                <Route path="/settings" element={<MainLayout><Settings /></MainLayout>} />
+                <Route path="/backtest" element={<MainLayout><Backtest /></MainLayout>} />
+                <Route path="*" element={<MainLayout><NotFound /></MainLayout>} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </AppProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

@@ -15,29 +15,27 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
-  SidebarTrigger
 } from "@/components/ui/sidebar";
 import { 
   Home, 
   Settings, 
   ChartLine, 
-  Sun, 
-  Moon, 
-  Laptop, 
   KeyRound,
   TrendingUp, 
   Clock, 
   CircleDollarSign
 } from "lucide-react";
-import { Button } from "./ui/button";
 import { useMemo, useState } from 'react';
 import ApiKeyModal from './ApiKeyModal';
+import ThemeSwitcher from './ThemeSwitcher';
+import NotificationCenter from './NotificationCenter';
+import ConnectionStatus from './ConnectionStatus';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { Avatar, AvatarFallback } from './ui/avatar';
 
 export function AppSidebar() {
   const location = useLocation();
-  const { theme, setTheme, apiKeysConfigured } = useAppContext();
+  const { apiKeysConfigured } = useAppContext();
   const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
 
   const navigationItems = useMemo(() => [
@@ -79,31 +77,6 @@ export function AppSidebar() {
     },
   ], [apiKeysConfigured]);
 
-  const themeIcon = useMemo(() => {
-    switch (theme) {
-      case 'light':
-        return <Sun className="h-4 w-4" />;
-      case 'dark':
-        return <Moon className="h-4 w-4" />;
-      default:
-        return <Laptop className="h-4 w-4" />;
-    }
-  }, [theme]);
-
-  const toggleTheme = () => {
-    switch (theme) {
-      case 'light':
-        setTheme('dark');
-        break;
-      case 'dark':
-        setTheme('system');
-        break;
-      default:
-        setTheme('light');
-        break;
-    }
-  };
-
   const isActive = (url: string) => {
     return location.pathname === url;
   };
@@ -119,6 +92,10 @@ export function AppSidebar() {
             <span className="text-xl font-bold text-foreground">SignalAI</span>
             <span className="hidden md:inline-flex text-xs font-semibold bg-secondary px-2 py-0.5 rounded">BETA</span>
           </Link>
+          <div className="flex items-center gap-2 mt-2">
+            <ConnectionStatus />
+            <NotificationCenter />
+          </div>
         </SidebarHeader>
         <SidebarContent>
           {/* Main Navigation */}
@@ -211,15 +188,7 @@ export function AppSidebar() {
         
         <SidebarFooter>
           <div className="flex items-center justify-between p-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className="rounded-full"
-              aria-label="Toggle theme"
-            >
-              {themeIcon}
-            </Button>
+            <ThemeSwitcher />
             
             <Avatar className="h-8 w-8">
               <AvatarFallback className="bg-primary/10 text-primary">
