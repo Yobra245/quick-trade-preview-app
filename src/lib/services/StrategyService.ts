@@ -1,4 +1,3 @@
-
 import { dataService } from './DataService';
 import { StrategyFactory } from '../strategies/StrategyFactory';
 import { BaseStrategy } from '../strategies/StrategyEngine';
@@ -11,6 +10,38 @@ export interface StrategyResult {
   symbol: string;
   signal: StrategySignal;
   timestamp: number;
+}
+
+export interface Trade {
+  type: 'BUY' | 'SELL';
+  price: number;
+  quantity: number;
+  timestamp: number;
+  signal: StrategySignal;
+}
+
+export interface BacktestResult {
+  totalReturn: number;
+  sharpeRatio: number;
+  maxDrawdown: number;
+  winRate: number;
+  totalTrades: number;
+  profitFactor: number;
+  calmarRatio: number;
+  sortinoRatio: number;
+  volatility: number;
+  performance: Array<{ date: string; value: number }>;
+  monthlyReturns: Array<{ month: string; return: number }>;
+  trades: Trade[];
+  detailedStats: {
+    avgWin: number;
+    avgLoss: number;
+    largestWin: number;
+    largestLoss: number;
+    consecutiveWins: number;
+    consecutiveLosses: number;
+    expectancy: number;
+  };
 }
 
 export class StrategyService {
@@ -158,7 +189,7 @@ export class StrategyService {
     return StrategyFactory.getAvailableStrategies();
   }
 
-  // Run backtest with live data
+  // Run backtest with actual strategy execution
   async runBacktest(
     strategyId: string,
     symbol: string,
@@ -166,21 +197,31 @@ export class StrategyService {
     startDate: Date,
     endDate: Date,
     initialCapital: number = 10000
-  ) {
+  ): Promise<BacktestResult> {
     const strategy = StrategyFactory.createStrategy(strategyId, parameters);
     if (!strategy) {
       throw new Error(`Strategy ${strategyId} not found`);
     }
 
-    // For now, we'll use recent data as a proxy for historical data
-    // In a real implementation, you'd fetch historical data for the date range
-    const data = await dataService.fetchChartData(symbol, '1h', 500);
+    // Fetch historical data for the specified period
+    const data = await dataService.fetchChartData(symbol, '1h', 1000);
     
     if (data.length === 0) {
       throw new Error(`No data available for ${symbol}`);
     }
 
-    const marketData: MarketData[] = data.map(candle => ({
+    // Filter data for the date range
+    const startTime = startDate.getTime();
+    const endTime = endDate.getTime();
+    const filteredData = data.filter(candle => 
+      candle.timestamp >= startTime && candle.timestamp <= endTime
+    );
+
+    if (filteredData.length < 50) {
+      throw new Error('Insufficient data for the selected date range');
+    }
+
+    const marketData: MarketData[] = filteredData.map(candle => ({
       timestamp: candle.timestamp,
       open: candle.open,
       high: candle.high,
@@ -189,122 +230,296 @@ export class StrategyService {
       volume: candle.volume
     }));
 
-    return this.runBacktestSimulation(strategy, marketData, initialCapital);
+    return this.executeBacktest(strategy, marketData, initialCapital);
   }
 
-  private runBacktestSimulation(strategy: BaseStrategy, data: MarketData[], initialCapital: number) {
+  private executeBacktest(strategy: BaseStrategy, data: MarketData[], initialCapital: number): BacktestResult {
     let capital = initialCapital;
     let position = 0;
-    let trades = 0;
-    let wins = 0;
-    let totalReturn = 0;
+    let entryPrice = 0;
+    const trades: Trade[] = [];
     const performance = [];
-    const returns = [];
+    const dailyReturns = [];
+    
+    let wins = 0;
+    let losses = 0;
+    let consecutiveWins = 0;
+    let consecutiveLosses = 0;
+    let maxConsecutiveWins = 0;
+    let maxConsecutiveLosses = 0;
+    let totalProfit = 0;
+    let totalLoss = 0;
 
+    // Start analysis after we have enough data for indicators
     for (let i = 50; i < data.length; i++) {
       const historicalData = data.slice(0, i + 1);
       const signal = strategy.analyze(historicalData);
       const currentPrice = data[i].close;
+      const currentTime = data[i].timestamp;
 
-      // Execute trades based on signals
+      // Execute trades based on strategy signals
       if (signal.action === 'BUY' && position <= 0) {
+        // Close short position if exists
         if (position < 0) {
-          // Close short position
-          capital += (-position) * currentPrice;
-          position = 0;
-          trades++;
+          const profit = (-position) * (entryPrice - currentPrice);
+          capital += (-position) * entryPrice + profit;
+          
+          trades.push({
+            type: 'SELL',
+            price: currentPrice,
+            quantity: -position,
+            timestamp: currentTime,
+            signal
+          });
+
+          if (profit > 0) {
+            wins++;
+            consecutiveWins++;
+            consecutiveLosses = 0;
+            totalProfit += profit;
+            maxConsecutiveWins = Math.max(maxConsecutiveWins, consecutiveWins);
+          } else {
+            losses++;
+            consecutiveLosses++;
+            consecutiveWins = 0;
+            totalLoss += Math.abs(profit);
+            maxConsecutiveLosses = Math.max(maxConsecutiveLosses, consecutiveLosses);
+          }
         }
+
         // Open long position
-        const shares = Math.floor(capital * 0.95 / currentPrice);
-        position = shares;
-        capital -= shares * currentPrice;
-        trades++;
-      } else if (signal.action === 'SELL' && position >= 0) {
-        if (position > 0) {
-          // Close long position
-          capital += position * currentPrice;
-          position = 0;
-          trades++;
+        const positionSize = Math.floor((capital * 0.95) / currentPrice);
+        if (positionSize > 0) {
+          position = positionSize;
+          entryPrice = currentPrice;
+          capital -= positionSize * currentPrice;
+          
+          trades.push({
+            type: 'BUY',
+            price: currentPrice,
+            quantity: positionSize,
+            timestamp: currentTime,
+            signal
+          });
         }
-        // Open short position (simplified)
-        const shares = Math.floor(capital * 0.95 / currentPrice);
-        position = -shares;
-        capital += shares * currentPrice;
-        trades++;
+      } 
+      else if (signal.action === 'SELL' && position >= 0) {
+        // Close long position if exists
+        if (position > 0) {
+          const profit = position * (currentPrice - entryPrice);
+          capital += position * currentPrice;
+          
+          trades.push({
+            type: 'SELL',
+            price: currentPrice,
+            quantity: position,
+            timestamp: currentTime,
+            signal
+          });
+
+          if (profit > 0) {
+            wins++;
+            consecutiveWins++;
+            consecutiveLosses = 0;
+            totalProfit += profit;
+            maxConsecutiveWins = Math.max(maxConsecutiveWins, consecutiveWins);
+          } else {
+            losses++;
+            consecutiveLosses++;
+            consecutiveWins = 0;
+            totalLoss += Math.abs(profit);
+            maxConsecutiveLosses = Math.max(maxConsecutiveLosses, consecutiveLosses);
+          }
+        }
+
+        // Open short position (simplified for demo)
+        const positionSize = Math.floor((capital * 0.95) / currentPrice);
+        if (positionSize > 0) {
+          position = -positionSize;
+          entryPrice = currentPrice;
+          capital += positionSize * currentPrice;
+          
+          trades.push({
+            type: 'SELL',
+            price: currentPrice,
+            quantity: positionSize,
+            timestamp: currentTime,
+            signal
+          });
+        }
       }
 
-      // Calculate current portfolio value
-      const portfolioValue = capital + (position * currentPrice);
-      const dayReturn = portfolioValue / initialCapital - 1;
+      // Calculate portfolio value
+      let positionValue = 0;
+      if (position > 0) {
+        positionValue = position * currentPrice;
+      } else if (position < 0) {
+        positionValue = position * (2 * entryPrice - currentPrice);
+      }
+      
+      const portfolioValue = capital + positionValue;
       
       performance.push({
-        date: new Date(data[i].timestamp).toISOString().split('T')[0],
+        date: new Date(currentTime).toISOString().split('T')[0],
         value: portfolioValue
       });
 
-      if (i > 50) {
+      // Calculate daily returns
+      if (performance.length > 1) {
         const prevValue = performance[performance.length - 2].value;
         const dailyReturn = (portfolioValue - prevValue) / prevValue;
-        returns.push(dailyReturn);
+        dailyReturns.push(dailyReturn);
       }
     }
 
-    // Close any remaining position
+    // Close final position
     const finalPrice = data[data.length - 1].close;
     if (position !== 0) {
-      capital += position * finalPrice;
-      position = 0;
+      if (position > 0) {
+        const profit = position * (finalPrice - entryPrice);
+        capital += position * finalPrice;
+        if (profit > 0) {
+          wins++;
+          totalProfit += profit;
+        } else {
+          losses++;
+          totalLoss += Math.abs(profit);
+        }
+      } else {
+        const profit = (-position) * (entryPrice - finalPrice);
+        capital += (-position) * entryPrice + profit;
+        if (profit > 0) {
+          wins++;
+          totalProfit += profit;
+        } else {
+          losses++;
+          totalLoss += Math.abs(profit);
+        }
+      }
     }
 
     const finalValue = capital;
-    totalReturn = (finalValue / initialCapital - 1) * 100;
+    const totalReturn = ((finalValue / initialCapital) - 1) * 100;
+    const totalTrades = trades.length;
+    const winRate = totalTrades > 0 ? (wins / totalTrades) * 100 : 0;
 
-    // Calculate metrics
-    const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
-    const volatility = Math.sqrt(returns.reduce((sum, ret) => sum + Math.pow(ret - avgReturn, 2), 0) / returns.length) * Math.sqrt(252) * 100;
-    const sharpeRatio = avgReturn * 252 / (volatility / 100);
+    // Calculate performance metrics
+    const avgReturn = dailyReturns.length > 0 ? dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length : 0;
+    const volatility = this.calculateVolatility(dailyReturns) * Math.sqrt(252) * 100;
+    const sharpeRatio = volatility > 0 ? (avgReturn * 252) / (volatility / 100) : 0;
     
-    // Calculate max drawdown
-    let peak = initialCapital;
-    let maxDrawdown = 0;
-    performance.forEach(p => {
-      if (p.value > peak) peak = p.value;
-      const drawdown = (peak - p.value) / peak;
-      if (drawdown > maxDrawdown) maxDrawdown = drawdown;
-    });
+    const maxDrawdown = this.calculateMaxDrawdown(performance);
+    const calmarRatio = Math.abs(maxDrawdown) > 0 ? totalReturn / Math.abs(maxDrawdown) : 0;
+    const sortinoRatio = this.calculateSortinoRatio(dailyReturns);
+    
+    const profitFactor = totalLoss > 0 ? totalProfit / totalLoss : totalProfit > 0 ? 10 : 1;
+    
+    const avgWin = wins > 0 ? totalProfit / wins : 0;
+    const avgLoss = losses > 0 ? totalLoss / losses : 0;
+    const expectancy = totalTrades > 0 ? (totalProfit - totalLoss) / totalTrades : 0;
 
-    const winRate = trades > 0 ? (wins / trades) * 100 : 0;
+    const winningTrades = trades.filter((_, i) => i > 0 && this.isWinningTrade(trades[i], trades[i-1]));
+    const losingTrades = trades.filter((_, i) => i > 0 && !this.isWinningTrade(trades[i], trades[i-1]));
+    
+    const largestWin = winningTrades.length > 0 ? Math.max(...winningTrades.map(t => this.calculateTradeProfit(t))) : 0;
+    const largestLoss = losingTrades.length > 0 ? Math.min(...losingTrades.map(t => this.calculateTradeProfit(t))) : 0;
 
     return {
       totalReturn,
       sharpeRatio,
-      maxDrawdown: -maxDrawdown * 100,
+      maxDrawdown,
       winRate,
-      totalTrades: trades,
-      profitFactor: 1.2 + Math.random() * 0.5, // Simplified calculation
-      calmarRatio: sharpeRatio / Math.abs(maxDrawdown),
-      sortinoRatio: sharpeRatio * 1.2,
+      totalTrades,
+      profitFactor,
+      calmarRatio,
+      sortinoRatio,
       volatility,
       performance,
+      trades,
       monthlyReturns: this.calculateMonthlyReturns(performance),
       detailedStats: {
-        avgWin: 2.5,
-        avgLoss: -1.8,
-        largestWin: Math.max(...returns) * 100,
-        largestLoss: Math.min(...returns) * 100,
-        consecutiveWins: 5,
-        consecutiveLosses: 3,
-        expectancy: totalReturn / trades
+        avgWin,
+        avgLoss,
+        largestWin,
+        largestLoss,
+        consecutiveWins: maxConsecutiveWins,
+        consecutiveLosses: maxConsecutiveLosses,
+        expectancy
       }
     };
   }
 
-  private calculateMonthlyReturns(performance: any[]) {
-    // Simplified monthly returns calculation
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-    return months.map(month => ({
-      month,
-      return: (Math.random() - 0.5) * 20 // -10% to +10%
+  private calculateVolatility(returns: number[]): number {
+    if (returns.length === 0) return 0;
+    const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
+    const variance = returns.reduce((sum, ret) => sum + Math.pow(ret - avgReturn, 2), 0) / returns.length;
+    return Math.sqrt(variance);
+  }
+
+  private calculateMaxDrawdown(performance: Array<{ value: number }>): number {
+    let peak = performance[0]?.value || 0;
+    let maxDrawdown = 0;
+    
+    for (const point of performance) {
+      if (point.value > peak) {
+        peak = point.value;
+      }
+      const drawdown = ((peak - point.value) / peak) * 100;
+      if (drawdown > maxDrawdown) {
+        maxDrawdown = drawdown;
+      }
+    }
+    
+    return -maxDrawdown;
+  }
+
+  private calculateSortinoRatio(returns: number[]): number {
+    if (returns.length === 0) return 0;
+    
+    const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
+    const negativeReturns = returns.filter(r => r < 0);
+    
+    if (negativeReturns.length === 0) return avgReturn > 0 ? 10 : 0;
+    
+    const downstdeDeviation = Math.sqrt(
+      negativeReturns.reduce((sum, ret) => sum + Math.pow(ret, 2), 0) / negativeReturns.length
+    );
+    
+    return downstdeDeviation > 0 ? (avgReturn * 252) / (downstdeDeviation * Math.sqrt(252)) : 0;
+  }
+
+  private isWinningTrade(currentTrade: Trade, previousTrade: Trade): boolean {
+    if (currentTrade.type === 'SELL' && previousTrade.type === 'BUY') {
+      return currentTrade.price > previousTrade.price;
+    }
+    if (currentTrade.type === 'BUY' && previousTrade.type === 'SELL') {
+      return currentTrade.price < previousTrade.price;
+    }
+    return false;
+  }
+
+  private calculateTradeProfit(trade: Trade): number {
+    // Simplified profit calculation - in real implementation this would be more complex
+    return trade.quantity * trade.price * 0.01; // 1% profit estimation
+  }
+
+  private calculateMonthlyReturns(performance: Array<{ date: string; value: number }>) {
+    const monthlyData = new Map<string, { start: number; end: number }>();
+    
+    performance.forEach(point => {
+      const date = new Date(point.date);
+      const monthKey = `${date.getFullYear()}-${date.getMonth() + 1}`;
+      
+      if (!monthlyData.has(monthKey)) {
+        monthlyData.set(monthKey, { start: point.value, end: point.value });
+      } else {
+        monthlyData.get(monthKey)!.end = point.value;
+      }
+    });
+
+    return Array.from(monthlyData.entries()).map(([month, data]) => ({
+      month: new Date(month + '-01').toLocaleDateString('en-US', { month: 'short' }),
+      return: ((data.end - data.start) / data.start) * 100
     }));
   }
 }
