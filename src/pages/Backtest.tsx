@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,8 +14,11 @@ import { toast } from "@/components/ui/use-toast";
 import { useBacktest } from '@/hooks/useStrategy';
 import { strategyService } from '@/lib/services/StrategyService';
 import BacktestResultsDisplay from '@/components/BacktestResultsDisplay';
+import MarketSelector from '@/components/MarketSelector';
+import { useAppContext } from '@/contexts/AppContext';
 
 const Backtest = () => {
+  const { selectedMarketType } = useAppContext();
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
   const [initialCapital, setInitialCapital] = useState('10000');
@@ -28,12 +31,36 @@ const Backtest = () => {
   // Get available strategies from service
   const strategies = strategyService.getAvailableStrategies();
 
-  const assets = [
-    { value: 'BTC/USDT', label: 'Bitcoin (BTC/USDT)' },
-    { value: 'ETH/USDT', label: 'Ethereum (ETH/USDT)' },
-    { value: 'ADA/USDT', label: 'Cardano (ADA/USDT)' },
-    { value: 'SOL/USDT', label: 'Solana (SOL/USDT)' }
-  ];
+  const allAssets = {
+    crypto: [
+      { value: 'BTC/USDT', label: 'Bitcoin (BTC/USDT)' },
+      { value: 'ETH/USDT', label: 'Ethereum (ETH/USDT)' },
+      { value: 'ADA/USDT', label: 'Cardano (ADA/USDT)' },
+      { value: 'SOL/USDT', label: 'Solana (SOL/USDT)' }
+    ],
+    forex: [
+      { value: 'EUR/USD', label: 'EUR/USD' },
+      { value: 'USD/JPY', label: 'USD/JPY' },
+      { value: 'GBP/USD', label: 'GBP/USD' },
+    ],
+    stocks: [
+      { value: 'AAPL', label: 'Apple (AAPL)' },
+      { value: 'GOOGL', label: 'Google (GOOGL)' },
+      { value: 'TSLA', label: 'Tesla (TSLA)' },
+    ]
+  };
+
+  const assets = allAssets[selectedMarketType as keyof typeof allAssets] || [];
+
+  useEffect(() => {
+    // Reset selected asset when market type changes
+    if (assets.length > 0) {
+      setSelectedAsset(assets[0].value);
+    } else {
+      setSelectedAsset('');
+    }
+  }, [selectedMarketType]);
+
 
   const selectedStrategyConfig = strategies.find(s => s.id === selectedStrategy);
 
@@ -117,6 +144,8 @@ const Backtest = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Strategy Backtesting</h1>
       </div>
+      
+      <MarketSelector />
 
       {/* Configuration Panel */}
       <Card>
@@ -149,7 +178,7 @@ const Backtest = () => {
 
             <div className="space-y-2">
               <Label htmlFor="asset">Trading Pair</Label>
-              <Select value={selectedAsset} onValueChange={setSelectedAsset}>
+              <Select value={selectedAsset} onValueChange={setSelectedAsset} disabled={!assets.length}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select asset" />
                 </SelectTrigger>
