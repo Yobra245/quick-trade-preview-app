@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/components/ui/use-toast';
-import { LoadingSkeleton } from '@/components/LoadingSkeleton';
+import LoadingSkeleton from '@/components/LoadingSkeleton';
 
 const UserProfile = () => {
   const { user, signOut } = useAuth();
@@ -38,7 +38,7 @@ const UserProfile = () => {
   }, [profile, tradingProfile]);
 
   if (loading) {
-    return <LoadingSkeleton />;
+    return <LoadingSkeleton type="card" count={2} />;
   }
 
   const handleSave = async () => {

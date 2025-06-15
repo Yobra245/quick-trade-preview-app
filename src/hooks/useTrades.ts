@@ -40,7 +40,15 @@ export function useTrades() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setTrades(data || []);
+      
+      // Type assertion to ensure side field matches our expected type
+      const typedTrades = (data || []).map(trade => ({
+        ...trade,
+        side: trade.side as 'BUY' | 'SELL',
+        status: trade.status as 'PENDING' | 'FILLED' | 'CANCELLED' | 'FAILED'
+      }));
+      
+      setTrades(typedTrades);
     } catch (error: any) {
       setError(error.message);
     } finally {

@@ -3,13 +3,13 @@ import React from 'react';
 import { useTrades } from '@/hooks/useTrades';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { LoadingSkeleton } from '@/components/LoadingSkeleton';
+import LoadingSkeleton from '@/components/LoadingSkeleton';
 
 const UserTrades = () => {
   const { trades, loading, error } = useTrades();
 
   if (loading) {
-    return <LoadingSkeleton />;
+    return <LoadingSkeleton type="table" />;
   }
 
   if (error) {

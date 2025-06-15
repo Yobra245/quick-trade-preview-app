@@ -3,13 +3,13 @@ import React from 'react';
 import { usePortfolio } from '@/hooks/usePortfolio';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { LoadingSkeleton } from '@/components/LoadingSkeleton';
+import LoadingSkeleton from '@/components/LoadingSkeleton';
 
 const UserPortfolio = () => {
   const { portfolio, loading, error } = usePortfolio();
 
   if (loading) {
-    return <LoadingSkeleton />;
+    return <LoadingSkeleton type="card" count={3} />;
   }
 
   if (error) {
