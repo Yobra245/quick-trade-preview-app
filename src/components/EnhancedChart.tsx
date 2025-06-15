@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,8 +17,6 @@ import {
   Legend
 } from 'recharts';
 import { 
-  ChevronLeft, 
-  ChevronRight, 
   ZoomIn, 
   ZoomOut,
   Download,
@@ -33,9 +30,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import CandlestickChart from './CandlestickChart';
 
 export type ChartType = 'area' | 'line' | 'candle' | 'bar';
-export type TimeframeType = '15m' | '1h' | '4h' | '1d' | '1w';
+export type TimeframeType = '1s' | '5s' | '15s' | '30s' | '1m' | '5m' | '15m' | '30m' | '1h' | '2h' | '4h' | '6h' | '12h' | '1d' | '3d' | '1w' | '1M' | '3M' | '6M' | '1y';
 
 interface EnhancedChartProps {
   data: any[];
@@ -49,9 +47,43 @@ interface EnhancedChartProps {
   allowZoom?: boolean;
   allowDownload?: boolean;
   valueFormatter?: (value: number) => string;
+  onTimeframeChange?: (timeframe: TimeframeType) => void;
 }
 
-const timeframes: TimeframeType[] = ['15m', '1h', '4h', '1d', '1w'];
+const timeframes: { value: TimeframeType; label: string; group: string }[] = [
+  // Seconds
+  { value: '1s', label: '1s', group: 'Seconds' },
+  { value: '5s', label: '5s', group: 'Seconds' },
+  { value: '15s', label: '15s', group: 'Seconds' },
+  { value: '30s', label: '30s', group: 'Seconds' },
+  
+  // Minutes
+  { value: '1m', label: '1m', group: 'Minutes' },
+  { value: '5m', label: '5m', group: 'Minutes' },
+  { value: '15m', label: '15m', group: 'Minutes' },
+  { value: '30m', label: '30m', group: 'Minutes' },
+  
+  // Hours
+  { value: '1h', label: '1h', group: 'Hours' },
+  { value: '2h', label: '2h', group: 'Hours' },
+  { value: '4h', label: '4h', group: 'Hours' },
+  { value: '6h', label: '6h', group: 'Hours' },
+  { value: '12h', label: '12h', group: 'Hours' },
+  
+  // Days
+  { value: '1d', label: '1D', group: 'Days' },
+  { value: '3d', label: '3D', group: 'Days' },
+  { value: '1w', label: '1W', group: 'Days' },
+  
+  // Months/Years
+  { value: '1M', label: '1M', group: 'Long Term' },
+  { value: '3M', label: '3M', group: 'Long Term' },
+  { value: '6M', label: '6M', group: 'Long Term' },
+  { value: '1y', label: '1Y', group: 'Long Term' }
+];
+
+// Popular timeframes for quick access
+const popularTimeframes: TimeframeType[] = ['1m', '5m', '15m', '1h', '4h', '1d', '1w'];
 
 const EnhancedChart: React.FC<EnhancedChartProps> = ({
   data,
@@ -64,7 +96,8 @@ const EnhancedChart: React.FC<EnhancedChartProps> = ({
   allowTimeframeChange = true,
   allowZoom = true,
   allowDownload = true,
-  valueFormatter = (value: number) => value.toFixed(2)
+  valueFormatter = (value: number) => value.toFixed(2),
+  onTimeframeChange
 }) => {
   const [chartType, setChartType] = useState<ChartType>(defaultChartType);
   const [timeframe, setTimeframe] = useState<TimeframeType>(defaultTimeframe);
@@ -108,10 +141,22 @@ const EnhancedChart: React.FC<EnhancedChartProps> = ({
   const config = colorConfig || defaultColorConfig;
   
   const formatXAxis = (tickItem: number) => {
-    return new Date(tickItem).toLocaleTimeString([], { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    });
+    const date = new Date(tickItem);
+    
+    // Format based on timeframe
+    if (['1s', '5s', '15s', '30s'].includes(timeframe)) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    } else if (['1m', '5m', '15m', '30m'].includes(timeframe)) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else if (['1h', '2h', '4h', '6h', '12h'].includes(timeframe)) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } else if (['1d', '3d'].includes(timeframe)) {
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    } else if (['1w'].includes(timeframe)) {
+      return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    } else {
+      return date.toLocaleDateString([], { year: '2-digit', month: 'short' });
+    }
   };
 
   const formatYAxis = (value: number) => {
@@ -128,7 +173,11 @@ const EnhancedChart: React.FC<EnhancedChartProps> = ({
 
   const handleTimeframeChange = (tf: TimeframeType) => {
     setTimeframe(tf);
-    // In a real app, this would fetch new data for the timeframe
+    onTimeframeChange?.(tf);
+  };
+
+  const handleChartTypeChange = (type: ChartType) => {
+    setChartType(type);
   };
 
   const handleDownload = () => {
@@ -161,12 +210,20 @@ const EnhancedChart: React.FC<EnhancedChartProps> = ({
   };
   
   const renderChart = () => {
-    // Use a subset of data based on zoom level
     const visibleData = zoomLevel !== 1 
       ? data.slice(0, Math.floor(data.length / zoomLevel)) 
       : data;
       
     switch (chartType) {
+      case 'candle':
+        return (
+          <CandlestickChart
+            data={visibleData}
+            height={height}
+            colorConfig={config}
+            valueFormatter={valueFormatter}
+          />
+        );
       case 'area':
         return (
           <>
@@ -199,7 +256,7 @@ const EnhancedChart: React.FC<EnhancedChartProps> = ({
               fillOpacity={1}
               fill={config.area.fill}
             />
-            {chartType === 'area' && <Legend />}
+            <Legend />
           </>
         );
       case 'line':
@@ -270,28 +327,34 @@ const EnhancedChart: React.FC<EnhancedChartProps> = ({
   };
   
   const getChartComponent = () => {
+    const visibleData = zoomLevel !== 1 ? data.slice(0, Math.floor(data.length / zoomLevel)) : data;
+    
+    if (chartType === 'candle') {
+      return renderChart();
+    }
+    
     switch (chartType) {
       case 'area':
         return (
-          <AreaChart data={zoomLevel !== 1 ? data.slice(0, Math.floor(data.length / zoomLevel)) : data}>
+          <AreaChart data={visibleData}>
             {renderChart()}
           </AreaChart>
         );
       case 'line':
         return (
-          <LineChart data={zoomLevel !== 1 ? data.slice(0, Math.floor(data.length / zoomLevel)) : data}>
+          <LineChart data={visibleData}>
             {renderChart()}
           </LineChart>
         );
       case 'bar':
         return (
-          <BarChart data={zoomLevel !== 1 ? data.slice(0, Math.floor(data.length / zoomLevel)) : data}>
+          <BarChart data={visibleData}>
             {renderChart()}
           </BarChart>
         );
       default:
         return (
-          <AreaChart data={zoomLevel !== 1 ? data.slice(0, Math.floor(data.length / zoomLevel)) : data}>
+          <AreaChart data={visibleData}>
             {renderChart()}
           </AreaChart>
         );
@@ -306,22 +369,56 @@ const EnhancedChart: React.FC<EnhancedChartProps> = ({
           
           <div className="flex items-center space-x-2">
             {allowTimeframeChange && (
-              <div className="flex bg-accent/50 rounded-md">
-                {timeframes.map(tf => (
-                  <Button
-                    key={tf}
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      "px-2 py-1 text-xs h-7",
-                      timeframe === tf ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                    )}
-                    onClick={() => handleTimeframeChange(tf)}
-                  >
-                    {tf}
-                  </Button>
-                ))}
-              </div>
+              <>
+                {/* Popular timeframes */}
+                <div className="hidden md:flex bg-accent/50 rounded-md">
+                  {popularTimeframes.map(tf => (
+                    <Button
+                      key={tf}
+                      variant="ghost"
+                      size="sm"
+                      className={cn(
+                        "px-2 py-1 text-xs h-7",
+                        timeframe === tf ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                      )}
+                      onClick={() => handleTimeframeChange(tf)}
+                    >
+                      {timeframes.find(t => t.value === tf)?.label || tf}
+                    </Button>
+                  ))}
+                </div>
+                
+                {/* All timeframes dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-7 px-2">
+                      More
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    {['Seconds', 'Minutes', 'Hours', 'Days', 'Long Term'].map(group => (
+                      <div key={group}>
+                        <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                          {group}
+                        </div>
+                        {timeframes
+                          .filter(tf => tf.group === group)
+                          .map(tf => (
+                            <DropdownMenuItem 
+                              key={tf.value}
+                              onClick={() => handleTimeframeChange(tf.value)}
+                              className={cn(
+                                timeframe === tf.value && "bg-accent"
+                              )}
+                            >
+                              {tf.label}
+                            </DropdownMenuItem>
+                          ))}
+                      </div>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
             )}
             
             <div className="flex items-center space-x-1">
@@ -357,13 +454,16 @@ const EnhancedChart: React.FC<EnhancedChartProps> = ({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setChartType('area')}>
+                    <DropdownMenuItem onClick={() => handleChartTypeChange('candle')}>
+                      Candlestick
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleChartTypeChange('area')}>
                       Area Chart
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setChartType('line')}>
+                    <DropdownMenuItem onClick={() => handleChartTypeChange('line')}>
                       Line Chart
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setChartType('bar')}>
+                    <DropdownMenuItem onClick={() => handleChartTypeChange('bar')}>
                       Bar Chart
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -386,12 +486,18 @@ const EnhancedChart: React.FC<EnhancedChartProps> = ({
       </CardHeader>
       
       <CardContent className="p-0" style={{ height: `${height}px` }}>
-        <ChartContainer 
-          config={config} 
-          className={cn("w-full h-full chart-" + symbol.replace('/', '-'))}
-        >
-          {getChartComponent()}
-        </ChartContainer>
+        {chartType === 'candle' ? (
+          <div className={cn("w-full h-full chart-" + symbol.replace('/', '-'))}>
+            {getChartComponent()}
+          </div>
+        ) : (
+          <ChartContainer 
+            config={config} 
+            className={cn("w-full h-full chart-" + symbol.replace('/', '-'))}
+          >
+            {getChartComponent()}
+          </ChartContainer>
+        )}
       </CardContent>
     </Card>
   );

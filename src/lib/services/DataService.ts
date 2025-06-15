@@ -1,4 +1,3 @@
-
 import { ChartData } from '@/lib/types';
 
 export interface MarketDataUpdate {
@@ -302,22 +301,80 @@ export class DataService {
 
   private mapTimeframeToInterval(timeframe: string): string {
     const mapping: { [key: string]: string } = {
+      // Seconds
+      '1s': '1s',
+      '5s': '5s',
+      '15s': '15s',
+      '30s': '30s',
+      
+      // Minutes
       '1m': '1m',
       '5m': '5m',
       '15m': '15m',
+      '30m': '30m',
+      
+      // Hours
       '1h': '1h',
+      '2h': '2h',
       '4h': '4h',
+      '6h': '6h',
+      '12h': '12h',
+      
+      // Days
       '1d': '1d',
-      '1w': '1w'
+      '3d': '3d',
+      '1w': '1w',
+      
+      // Months/Years (Binance doesn't support these directly, so we use 1d and aggregate)
+      '1M': '1M',
+      '3M': '3M',
+      '6M': '6M',
+      '1y': '1y'
     };
     return mapping[timeframe] || '1h';
   }
 
-  private generateChartData(symbol: string, length: number): ChartData[] {
+  private getTimeframeMilliseconds(timeframe: string): number {
+    const mapping: { [key: string]: number } = {
+      // Seconds
+      '1s': 1000,
+      '5s': 5000,
+      '15s': 15000,
+      '30s': 30000,
+      
+      // Minutes
+      '1m': 60000,
+      '5m': 300000,
+      '15m': 900000,
+      '30m': 1800000,
+      
+      // Hours
+      '1h': 3600000,
+      '2h': 7200000,
+      '4h': 14400000,
+      '6h': 21600000,
+      '12h': 43200000,
+      
+      // Days
+      '1d': 86400000,
+      '3d': 259200000,
+      '1w': 604800000,
+      
+      // Months/Years (approximate)
+      '1M': 2629746000, // 30.44 days
+      '3M': 7889238000, // 91.31 days
+      '6M': 15778476000, // 182.62 days
+      '1y': 31556952000 // 365.25 days
+    };
+    return mapping[timeframe] || 3600000; // Default to 1 hour
+  }
+
+  private generateChartData(symbol: string, length: number, timeframe: string = '1h'): ChartData[] {
     const data: ChartData[] = [];
     let lastClose = this.getBasePrice(symbol);
     const volatility = this.getVolatility(symbol) * this.getBasePrice(symbol);
     const now = Date.now();
+    const intervalMs = this.getTimeframeMilliseconds(timeframe);
     
     for (let i = 0; i < length; i++) {
       const change = (Math.random() - 0.5) * volatility;
@@ -327,7 +384,7 @@ export class DataService {
       const low = Math.min(open, close) - Math.random() * volatility * 0.3;
       
       data.push({
-        timestamp: now - (length - i) * 3600000, // 1 hour intervals
+        timestamp: now - (length - i) * intervalMs,
         open,
         high,
         low,

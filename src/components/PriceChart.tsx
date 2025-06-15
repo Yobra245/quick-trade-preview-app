@@ -1,6 +1,5 @@
-
-import React from 'react';
-import EnhancedChart from './EnhancedChart';
+import React, { useState } from 'react';
+import EnhancedChart, { TimeframeType } from './EnhancedChart';
 import { useAppContext } from '@/contexts/AppContext';
 import { useLiveChartData } from '@/hooks/useLiveData';
 import { Card, CardContent } from '@/components/ui/card';
@@ -8,17 +7,18 @@ import { Loader2, WifiOff } from 'lucide-react';
 
 interface PriceChartProps {
   symbol: string;
-  timeframe?: string;
+  timeframe?: TimeframeType;
   height?: number;
 }
 
 const PriceChart: React.FC<PriceChartProps> = ({ 
   symbol, 
-  timeframe = '1h',
+  timeframe: initialTimeframe = '1h',
   height = 300
 }) => {
   const { selectedMarketType } = useAppContext();
-  const { chartData, loading, error } = useLiveChartData(symbol, timeframe);
+  const [currentTimeframe, setCurrentTimeframe] = useState<TimeframeType>(initialTimeframe);
+  const { chartData, loading, error } = useLiveChartData(symbol, currentTimeframe);
 
   // Enhanced chart configuration based on market type
   const getColorConfig = () => {
@@ -59,6 +59,10 @@ const PriceChart: React.FC<PriceChartProps> = ({
     return value > 1000 ? 
       `${(value / 1000).toFixed(1)}k` : 
       value.toFixed(1);
+  };
+
+  const handleTimeframeChange = (newTimeframe: TimeframeType) => {
+    setCurrentTimeframe(newTimeframe);
   };
 
   if (loading) {
@@ -108,7 +112,9 @@ const PriceChart: React.FC<PriceChartProps> = ({
       height={height}
       colorConfig={colorConfig}
       valueFormatter={formatValue}
-      defaultChartType="area"
+      defaultChartType="candle"
+      defaultTimeframe={currentTimeframe}
+      onTimeframeChange={handleTimeframeChange}
     />
   );
 };
