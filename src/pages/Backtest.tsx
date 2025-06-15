@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,24 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Play, Download, BarChart3, Settings } from "lucide-react";
+import { CalendarIcon, Play, BarChart3, Settings } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "@/components/ui/use-toast";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  Cell
-} from 'recharts';
 import { useBacktest } from '@/hooks/useStrategy';
 import { strategyService } from '@/lib/services/StrategyService';
+import BacktestResultsDisplay from '@/components/BacktestResultsDisplay';
 
 const Backtest = () => {
   const [startDate, setStartDate] = useState<Date>();
@@ -52,6 +42,15 @@ const Backtest = () => {
       toast({
         title: "Missing Parameters",
         description: "Please fill in all required fields to run the backtest.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (startDate >= endDate) {
+      toast({
+        title: "Invalid Date Range",
+        description: "End date must be after start date.",
         variant: "destructive"
       });
       return;
@@ -90,7 +89,16 @@ const Backtest = () => {
   const exportResults = () => {
     if (!results) return;
     
-    const dataStr = JSON.stringify(results, null, 2);
+    const dataStr = JSON.stringify({
+      strategy: selectedStrategyConfig?.name,
+      asset: selectedAsset,
+      period: {
+        start: startDate?.toISOString(),
+        end: endDate?.toISOString()
+      },
+      results: results
+    }, null, 2);
+    
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement('a');
@@ -108,14 +116,6 @@ const Backtest = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Strategy Backtesting</h1>
-        <div className="flex gap-2">
-          {results && (
-            <Button variant="outline" onClick={exportResults}>
-              <Download className="mr-2 h-4 w-4" />
-              Export Results
-            </Button>
-          )}
-        </div>
       </div>
 
       {/* Configuration Panel */}
@@ -279,111 +279,9 @@ const Backtest = () => {
         </CardContent>
       </Card>
 
-      {/* Results Panel */}
+      {/* Enhanced Results Display */}
       {results && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Enhanced Performance Metrics */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Performance Metrics</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">{results.totalReturn.toFixed(2)}%</div>
-                  <div className="text-sm text-gray-600">Total Return</div>
-                </div>
-                <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">{results.sharpeRatio.toFixed(2)}</div>
-                  <div className="text-sm text-gray-600">Sharpe Ratio</div>
-                </div>
-                <div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">{results.calmarRatio.toFixed(2)}</div>
-                  <div className="text-sm text-gray-600">Calmar Ratio</div>
-                </div>
-                <div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
-                  <div className="text-2xl font-bold text-orange-600">{results.sortinoRatio.toFixed(2)}</div>
-                  <div className="text-sm text-gray-600">Sortino Ratio</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Detailed Trading Statistics */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Trading Statistics</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Win Rate</span>
-                  <span className="font-semibold text-green-600">{results.winRate.toFixed(1)}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Trades</span>
-                  <span className="font-semibold">{results.totalTrades}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Max Drawdown</span>
-                  <span className="font-semibold text-red-600">{results.maxDrawdown.toFixed(2)}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Volatility</span>
-                  <span className="font-semibold">{results.volatility.toFixed(2)}%</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Performance Chart */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Portfolio Performance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={results.performance}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line 
-                    type="monotone" 
-                    dataKey="value" 
-                    stroke="#3b82f6" 
-                    strokeWidth={2}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Monthly Returns */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Monthly Returns</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={results.monthlyReturns}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="return">
-                    {results.monthlyReturns.map((entry: any, index: number) => (
-                      <Cell 
-                        key={`cell-${index}`}
-                        fill={entry.return >= 0 ? "#22c55e" : "#ef4444"}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </div>
+        <BacktestResultsDisplay results={results} onExport={exportResults} />
       )}
 
       {error && (

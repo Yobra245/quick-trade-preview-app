@@ -23,10 +23,13 @@ import {
   KeyRound,
   TrendingUp, 
   Clock, 
-  CircleDollarSign
+  CircleDollarSign,
+  BarChart3,
+  Shield
 } from "lucide-react";
 import { useMemo, useState } from 'react';
 import ApiKeyModal from './ApiKeyModal';
+import MarketsModal from './MarketsModal';
 import ThemeSwitcher from './ThemeSwitcher';
 import NotificationCenter from './NotificationCenter';
 import ConnectionStatus from './ConnectionStatus';
@@ -37,6 +40,7 @@ export function AppSidebar() {
   const location = useLocation();
   const { apiKeysConfigured } = useAppContext();
   const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
+  const [marketsModalOpen, setMarketsModalOpen] = useState(false);
 
   const navigationItems = useMemo(() => [
     {
@@ -54,9 +58,20 @@ export function AppSidebar() {
       url: "/settings",
       icon: Settings,
     },
+    {
+      title: "Admin",
+      url: "/admin",
+      icon: Shield,
+    },
   ], []);
 
   const toolItems = useMemo(() => [
+    {
+      title: "Live Markets",
+      action: () => setMarketsModalOpen(true),
+      icon: BarChart3,
+      disabled: false,
+    },
     {
       title: "Market Analysis",
       url: "#",
@@ -134,20 +149,25 @@ export function AppSidebar() {
                       <TooltipTrigger asChild>
                         <div className="w-full">
                           <SidebarMenuButton
-                            asChild
-                            isActive={isActive(item.url)}
+                            onClick={item.action}
+                            isActive={item.url ? isActive(item.url) : false}
                             tooltip={item.disabled ? "Configure API keys first" : item.title}
                             className={cn(
                               item.disabled && "opacity-50 cursor-not-allowed"
                             )}
                           >
-                            {item.disabled ? (
+                            {item.disabled && !item.action ? (
                               <div>
                                 <item.icon className="h-4 w-4" />
                                 <span>{item.title}</span>
                               </div>
+                            ) : item.action ? (
+                              <div className="flex items-center">
+                                <item.icon className="h-4 w-4" />
+                                <span>{item.title}</span>
+                              </div>
                             ) : (
-                              <Link to={item.url}>
+                              <Link to={item.url!}>
                                 <item.icon className="h-4 w-4" />
                                 <span>{item.title}</span>
                               </Link>
@@ -202,6 +222,11 @@ export function AppSidebar() {
       <ApiKeyModal
         open={apiKeyModalOpen}
         onOpenChange={setApiKeyModalOpen}
+      />
+      
+      <MarketsModal
+        open={marketsModalOpen}
+        onOpenChange={setMarketsModalOpen}
       />
     </>
   );

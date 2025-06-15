@@ -8,6 +8,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import Index from "./pages/Index";
 import Settings from "./pages/Settings";
 import Backtest from "./pages/Backtest";
+import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import MainLayout from "./components/MainLayout";
@@ -52,6 +53,11 @@ const App = () => (
                   <Route path="/backtest" element={
                     <ProtectedRoute>
                       <MainLayout><Backtest /></MainLayout>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin" element={
+                    <ProtectedRoute>
+                      <MainLayout><Admin /></MainLayout>
                     </ProtectedRoute>
                   } />
                   <Route path="*" element={
