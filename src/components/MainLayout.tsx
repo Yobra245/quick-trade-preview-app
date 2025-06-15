@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { AppSidebar } from './AppSidebar';
 import Breadcrumb from './Breadcrumb';
 import { SidebarInset, SidebarProvider } from './ui/sidebar';
@@ -14,6 +15,7 @@ interface MainLayoutProps {
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const { apiKeysConfigured } = useAppContext();
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const location = useLocation();
   
   // Check if API keys are configured and show modal if not
   useEffect(() => {
@@ -39,7 +41,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           <div className="container mx-auto px-4">
             <Breadcrumb className="mb-6" />
             <ApiKeyModal open={showApiKeyModal} onOpenChange={setShowApiKeyModal} />
-            <main>{children}</main>
+            <main key={location.pathname} className="animate-fade-in">{children}</main>
           </div>
         </SidebarInset>
       </div>
