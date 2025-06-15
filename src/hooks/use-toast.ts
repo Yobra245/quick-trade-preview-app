@@ -223,12 +223,9 @@ toast.warning = (title: string, description?: string) => {
 
 toast.loading = (title: string, description?: string) => {
   return toast({
-    title,
+    title: `⏳ ${title}`,
     description,
-    className: "relative pl-8",
-    beforeContent: (
-      <div className="absolute left-2.5 top-3 animate-spin rounded-full h-4 w-4 border-2 border-primary border-r-transparent" />
-    ),
+    className: "bg-blue-50 text-blue-900 dark:bg-blue-900/20 dark:text-blue-50",
   });
 };
 
