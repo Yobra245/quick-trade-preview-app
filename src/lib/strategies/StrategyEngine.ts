@@ -1,4 +1,3 @@
-
 import { StrategyConfig, StrategySignal, MarketData, BacktestResult } from './types';
 
 export abstract class BaseStrategy {
@@ -14,6 +13,19 @@ export abstract class BaseStrategy {
   abstract getDefaultParameters(): Record<string, any>;
   abstract getName(): string;
   abstract getDescription(): string;
+
+  protected createNeutralSignal(currentData: MarketData): StrategySignal {
+    return {
+      action: 'HOLD',
+      strength: 0,
+      confidence: 0,
+      entryPrice: currentData.close,
+      stopLoss: currentData.close,
+      takeProfit: currentData.close,
+      indicators: [],
+      reasoning: ['Insufficient data for analysis']
+    };
+  }
 
   protected calculateSMA(data: number[], period: number): number[] {
     const sma = [];

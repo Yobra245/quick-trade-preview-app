@@ -1,18 +1,20 @@
-
 import { BaseStrategy } from './StrategyEngine';
 import { MACDStrategy } from './MACDStrategy';
 import { RSIStrategy } from './RSIStrategy';
 import { BollingerStrategy } from './BollingerStrategy';
 import { StrategyConfig } from './types';
 
-type StrategyClass = typeof MACDStrategy | typeof RSIStrategy | typeof BollingerStrategy;
+type StrategyConstructor = new (config: StrategyConfig, parameters?: Record<string, any>) => BaseStrategy;
 
 export class StrategyFactory {
-  private static strategies: Map<string, StrategyClass> = new Map([
-    ['macd-crossover', MACDStrategy],
-    ['rsi-oversold', RSIStrategy],
-    ['bollinger-bands', BollingerStrategy]
-  ]);
+  private static strategies: Map<string, StrategyConstructor> = new Map();
+
+  static {
+    // Initialize strategies in static block
+    this.strategies.set('macd-crossover', MACDStrategy);
+    this.strategies.set('rsi-oversold', RSIStrategy);
+    this.strategies.set('bollinger-bands', BollingerStrategy);
+  }
 
   static createStrategy(strategyId: string, parameters?: Record<string, any>): BaseStrategy | null {
     const StrategyClass = this.strategies.get(strategyId);
@@ -80,7 +82,7 @@ export class StrategyFactory {
     return configs[strategyId] || configs['macd-crossover'];
   }
 
-  static registerStrategy(id: string, strategyClass: StrategyClass, config: StrategyConfig): void {
+  static registerStrategy(id: string, strategyClass: StrategyConstructor, config: StrategyConfig): void {
     this.strategies.set(id, strategyClass);
   }
 }

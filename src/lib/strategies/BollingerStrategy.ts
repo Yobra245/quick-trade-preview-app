@@ -1,4 +1,3 @@
-
 import { BaseStrategy } from './StrategyEngine';
 import { StrategySignal, MarketData, TechnicalIndicator } from './types';
 
@@ -199,19 +198,6 @@ export class BollingerStrategy extends BaseStrategy {
         : Math.min(currentPrice - (atr * riskMultiplier * 1.5), currentMiddle),
       indicators,
       reasoning
-    };
-  }
-
-  private createNeutralSignal(currentData: MarketData): StrategySignal {
-    return {
-      action: 'HOLD',
-      strength: 0,
-      confidence: 0,
-      entryPrice: currentData.close,
-      stopLoss: currentData.close,
-      takeProfit: currentData.close,
-      indicators: [],
-      reasoning: ['Insufficient data for analysis']
     };
   }
 }
