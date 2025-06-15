@@ -8,10 +8,13 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import Index from "./pages/Index";
 import Settings from "./pages/Settings";
 import Backtest from "./pages/Backtest";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import MainLayout from "./components/MainLayout";
 import ErrorBoundary from "./components/ErrorBoundary";
+import ProtectedRoute from "./components/ProtectedRoute";
 import { AppProvider } from "./contexts/AppContext";
+import { AuthProvider } from "./hooks/useAuth";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,20 +31,39 @@ const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <AppProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<MainLayout><Index /></MainLayout>} />
-                <Route path="/settings" element={<MainLayout><Settings /></MainLayout>} />
-                <Route path="/backtest" element={<MainLayout><Backtest /></MainLayout>} />
-                <Route path="*" element={<MainLayout><NotFound /></MainLayout>} />
-              </Routes>
-            </BrowserRouter>
-          </TooltipProvider>
-        </AppProvider>
+        <AuthProvider>
+          <AppProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/" element={
+                    <ProtectedRoute>
+                      <MainLayout><Index /></MainLayout>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/settings" element={
+                    <ProtectedRoute>
+                      <MainLayout><Settings /></MainLayout>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/backtest" element={
+                    <ProtectedRoute>
+                      <MainLayout><Backtest /></MainLayout>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="*" element={
+                    <ProtectedRoute>
+                      <MainLayout><NotFound /></MainLayout>
+                    </ProtectedRoute>
+                  } />
+                </Routes>
+              </BrowserRouter>
+            </TooltipProvider>
+          </AppProvider>
+        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   </ErrorBoundary>

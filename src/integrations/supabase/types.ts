@@ -9,7 +9,192 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      portfolios: {
+        Row: {
+          average_price: number | null
+          current_value: number | null
+          id: string
+          last_updated: string
+          profit_loss: number | null
+          profit_loss_percentage: number | null
+          quantity: number
+          symbol: string
+          user_id: string
+        }
+        Insert: {
+          average_price?: number | null
+          current_value?: number | null
+          id?: string
+          last_updated?: string
+          profit_loss?: number | null
+          profit_loss_percentage?: number | null
+          quantity?: number
+          symbol: string
+          user_id: string
+        }
+        Update: {
+          average_price?: number | null
+          current_value?: number | null
+          id?: string
+          last_updated?: string
+          profit_loss?: number | null
+          profit_loss_percentage?: number | null
+          quantity?: number
+          symbol?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      trades: {
+        Row: {
+          created_at: string
+          exchange_order_id: string | null
+          filled_at: string | null
+          id: string
+          price: number
+          quantity: number
+          side: string
+          status: string
+          strategy_id: string | null
+          symbol: string
+          total_amount: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          exchange_order_id?: string | null
+          filled_at?: string | null
+          id?: string
+          price: number
+          quantity: number
+          side: string
+          status?: string
+          strategy_id?: string | null
+          symbol: string
+          total_amount: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          exchange_order_id?: string | null
+          filled_at?: string | null
+          id?: string
+          price?: number
+          quantity?: number
+          side?: string
+          status?: string
+          strategy_id?: string | null
+          symbol?: string
+          total_amount?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      trading_profiles: {
+        Row: {
+          auto_trading_enabled: boolean | null
+          created_at: string
+          exchange_api_key: string | null
+          exchange_secret_key: string | null
+          id: string
+          max_position_size: number | null
+          preferred_exchange: string | null
+          risk_tolerance: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_trading_enabled?: boolean | null
+          created_at?: string
+          exchange_api_key?: string | null
+          exchange_secret_key?: string | null
+          id?: string
+          max_position_size?: number | null
+          preferred_exchange?: string | null
+          risk_tolerance?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_trading_enabled?: boolean | null
+          created_at?: string
+          exchange_api_key?: string | null
+          exchange_secret_key?: string | null
+          id?: string
+          max_position_size?: number | null
+          preferred_exchange?: string | null
+          risk_tolerance?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_strategies: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          parameters: Json | null
+          strategy_name: string
+          strategy_type: string
+          symbols: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          parameters?: Json | null
+          strategy_name: string
+          strategy_type: string
+          symbols: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          parameters?: Json | null
+          strategy_name?: string
+          strategy_type?: string
+          symbols?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
