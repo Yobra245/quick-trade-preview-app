@@ -17,10 +17,17 @@ const ConnectionStatus: React.FC = () => {
     connectionError 
   } = useMetaTraderConnection();
 
+  console.log('ConnectionStatus - selectedExchange:', selectedExchange);
+  console.log('ConnectionStatus - isMetaTrader:', isMetaTrader);
+  console.log('ConnectionStatus - mtConnected:', mtConnected);
+  console.log('ConnectionStatus - mtChecking:', mtChecking);
+
   // For MetaTrader, use the dedicated connection status
   const shouldUseMetaTraderStatus = isMetaTrader;
   
   useEffect(() => {
+    console.log('ConnectionStatus useEffect - shouldUseMetaTraderStatus:', shouldUseMetaTraderStatus);
+    
     if (shouldUseMetaTraderStatus) {
       // For MetaTrader, use the MT connection status
       if (mtChecking) {
@@ -93,6 +100,9 @@ const ConnectionStatus: React.FC = () => {
           {connectionError}
         </span>
       )}
+      <div className="text-xs text-muted-foreground">
+        Exchange: {selectedExchange || 'None'} | MT: {isMetaTrader ? 'Yes' : 'No'}
+      </div>
     </div>
   );
 };

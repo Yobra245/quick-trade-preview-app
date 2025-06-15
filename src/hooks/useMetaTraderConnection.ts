@@ -13,6 +13,10 @@ export const useMetaTraderConnection = () => {
   const isMetaTrader = selectedExchange === 'mt4' || selectedExchange === 'mt5';
   const port = selectedExchange === 'mt4' ? '9090' : '9091';
 
+  console.log('useMetaTraderConnection - selectedExchange:', selectedExchange);
+  console.log('useMetaTraderConnection - isMetaTrader:', isMetaTrader);
+  console.log('useMetaTraderConnection - port:', port);
+
   const cleanup = () => {
     if (wsRef.current) {
       wsRef.current.close();
@@ -29,7 +33,10 @@ export const useMetaTraderConnection = () => {
   };
 
   const connect = () => {
+    console.log('useMetaTraderConnection connect() called - isMetaTrader:', isMetaTrader);
+    
     if (!isMetaTrader) {
+      console.log('🔌 Not a MetaTrader exchange, setting disconnected state');
       setIsConnected(false);
       setConnectionError(null);
       return;
@@ -38,6 +45,7 @@ export const useMetaTraderConnection = () => {
     // Don't attempt connection if already connected or connecting
     if (wsRef.current?.readyState === WebSocket.CONNECTING || 
         wsRef.current?.readyState === WebSocket.OPEN) {
+      console.log('🔄 Connection already exists, skipping connect attempt');
       return;
     }
 
@@ -45,14 +53,13 @@ export const useMetaTraderConnection = () => {
     setConnectionError(null);
     
     try {
-      console.log(`Attempting to connect to MetaTrader on port ${port}`);
+      console.log(`🔌 Attempting to connect to MetaTrader on port ${port}`);
       console.log(`Current location: ${window.location.protocol}//${window.location.host}`);
       console.log(`WebSocket URL: ws://localhost:${port}`);
       
       const ws = new WebSocket(`ws://localhost:${port}`);
       wsRef.current = ws;
 
-      // Add more detailed logging for connection states
       ws.addEventListener('open', () => {
         console.log(`✅ Connected to ${selectedExchange?.toUpperCase()} on port ${port}`);
         setIsConnected(true);
@@ -61,13 +68,13 @@ export const useMetaTraderConnection = () => {
         
         // Send initial ping to verify EA is responding
         ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
-        console.log('Sent initial ping to EA');
+        console.log('📤 Sent initial ping to EA');
         
         // Set up periodic ping to keep connection alive
         pingIntervalRef.current = setInterval(() => {
           if (ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
-            console.log('Sent periodic ping to EA');
+            console.log('📤 Sent periodic ping to EA');
           }
         }, 10000); // Ping every 10 seconds
       });
@@ -75,12 +82,12 @@ export const useMetaTraderConnection = () => {
       ws.addEventListener('message', (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log('Received message from MetaTrader EA:', data);
+          console.log('📥 Received message from MetaTrader EA:', data);
           if (data.type === 'pong') {
             console.log('✅ Received pong from MetaTrader EA - connection verified');
           }
         } catch (error) {
-          console.log('Received non-JSON message from MetaTrader:', event.data);
+          console.log('📥 Received non-JSON message from MetaTrader:', event.data);
         }
       });
 
@@ -93,10 +100,9 @@ export const useMetaTraderConnection = () => {
           extensions: ws.extensions
         });
         
-        // More specific error messages based on ready state
         let errorMessage = 'Connection failed. ';
         if (ws.readyState === WebSocket.CONNECTING) {
-          errorMessage += 'Unable to establish connection to MetaTrader EA. Check if MT5 is running and EA is active.';
+          errorMessage += 'Unable to establish connection to MetaTrader EA. Check if MT5 is running and EA is active on port ' + port + '.';
         } else {
           errorMessage += 'Connection error occurred. Ensure MetaTrader is running with SignalAI EA.';
         }
@@ -109,7 +115,6 @@ export const useMetaTraderConnection = () => {
       ws.addEventListener('close', (event) => {
         console.log(`❌ MetaTrader connection closed. Code: ${event.code}, Reason: ${event.reason}, Clean: ${event.wasClean}`);
         
-        // Log more details about the close event
         const closeReasons = {
           1000: 'Normal closure',
           1001: 'Going away',
@@ -139,18 +144,18 @@ export const useMetaTraderConnection = () => {
         if (event.code !== 1000 && isMetaTrader) {
           setConnectionError(`Connection lost (${closeReasons[event.code] || event.code}). Attempting to reconnect...`);
           reconnectTimeoutRef.current = setTimeout(() => {
-            console.log('Attempting automatic reconnection...');
+            console.log('🔄 Attempting automatic reconnection...');
             connect();
           }, 5000);
         }
       });
 
-      // Connection timeout with more detailed logging
+      // Connection timeout
       setTimeout(() => {
         if (ws.readyState === WebSocket.CONNECTING) {
-          console.log('❌ Connection timeout - force closing WebSocket');
+          console.log('⏰ Connection timeout - force closing WebSocket');
           ws.close();
-          setConnectionError('Connection timeout. Verify MetaTrader is running and EA is properly configured.');
+          setConnectionError('Connection timeout. Verify MetaTrader is running and EA is properly configured on port ' + port + '.');
           setIsConnected(false);
           setIsChecking(false);
         }
@@ -174,17 +179,17 @@ export const useMetaTraderConnection = () => {
 
   const checkConnection = () => {
     if (wsRef.current?.readyState === WebSocket.OPEN) {
-      // Connection is already open, just send a ping
-      console.log('Connection is open, sending ping...');
+      console.log('📡 Connection is open, sending ping...');
       wsRef.current.send(JSON.stringify({ type: 'ping', timestamp: Date.now() }));
     } else {
-      console.log('Connection not open, attempting to reconnect...');
-      // Reconnect
+      console.log('🔄 Connection not open, attempting to reconnect...');
       connect();
     }
   };
 
   useEffect(() => {
+    console.log(`🔄 useEffect triggered - selectedExchange: ${selectedExchange}, isMetaTrader: ${isMetaTrader}`);
+    
     if (isMetaTrader) {
       console.log(`🔄 Setting up MetaTrader connection for ${selectedExchange}`);
       connect();
