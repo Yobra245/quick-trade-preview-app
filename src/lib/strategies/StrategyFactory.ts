@@ -5,8 +5,10 @@ import { RSIStrategy } from './RSIStrategy';
 import { BollingerStrategy } from './BollingerStrategy';
 import { StrategyConfig } from './types';
 
+type StrategyClass = typeof MACDStrategy | typeof RSIStrategy | typeof BollingerStrategy;
+
 export class StrategyFactory {
-  private static strategies: Map<string, typeof BaseStrategy> = new Map([
+  private static strategies: Map<string, StrategyClass> = new Map([
     ['macd-crossover', MACDStrategy],
     ['rsi-oversold', RSIStrategy],
     ['bollinger-bands', BollingerStrategy]
@@ -78,7 +80,7 @@ export class StrategyFactory {
     return configs[strategyId] || configs['macd-crossover'];
   }
 
-  static registerStrategy(id: string, strategyClass: typeof BaseStrategy, config: StrategyConfig): void {
+  static registerStrategy(id: string, strategyClass: StrategyClass, config: StrategyConfig): void {
     this.strategies.set(id, strategyClass);
   }
 }
