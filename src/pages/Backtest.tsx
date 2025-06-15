@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,8 @@ import {
   Tooltip,
   ResponsiveContainer,
   BarChart,
-  Bar
+  Bar,
+  Cell
 } from 'recharts';
 
 const Backtest = () => {
@@ -322,10 +322,14 @@ const Backtest = () => {
                   <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip />
-                  <Bar 
-                    dataKey="return" 
-                    fill={(dataPoint: any) => dataPoint.return >= 0 ? "#22c55e" : "#ef4444"}
-                  />
+                  <Bar dataKey="return">
+                    {results.monthlyReturns.map((entry: any, index: number) => (
+                      <Cell 
+                        key={`cell-${index}`}
+                        fill={entry.return >= 0 ? "#22c55e" : "#ef4444"}
+                      />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
