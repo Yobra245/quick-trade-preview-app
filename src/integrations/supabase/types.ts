@@ -9,6 +9,99 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      live_orders: {
+        Row: {
+          average_fill_price: number | null
+          created_at: string
+          exchange: string
+          exchange_order_id: string | null
+          filled_at: string | null
+          filled_quantity: number | null
+          id: string
+          order_type: string
+          price: number | null
+          quantity: number
+          side: string
+          status: string
+          stop_price: number | null
+          strategy_id: string | null
+          symbol: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          average_fill_price?: number | null
+          created_at?: string
+          exchange: string
+          exchange_order_id?: string | null
+          filled_at?: string | null
+          filled_quantity?: number | null
+          id?: string
+          order_type: string
+          price?: number | null
+          quantity: number
+          side: string
+          status?: string
+          stop_price?: number | null
+          strategy_id?: string | null
+          symbol: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          average_fill_price?: number | null
+          created_at?: string
+          exchange?: string
+          exchange_order_id?: string | null
+          filled_at?: string | null
+          filled_quantity?: number | null
+          id?: string
+          order_type?: string
+          price?: number | null
+          quantity?: number
+          side?: string
+          status?: string
+          stop_price?: number | null
+          strategy_id?: string | null
+          symbol?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          data: Json | null
+          id: string
+          message: string
+          read: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          message: string
+          read?: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          message?: string
+          read?: boolean
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       portfolios: {
         Row: {
           average_price: number | null
@@ -45,12 +138,49 @@ export type Database = {
         }
         Relationships: []
       }
+      price_alerts: {
+        Row: {
+          condition: string
+          created_at: string
+          current_price: number | null
+          id: string
+          is_active: boolean
+          symbol: string
+          target_price: number
+          triggered_at: string | null
+          user_id: string
+        }
+        Insert: {
+          condition: string
+          created_at?: string
+          current_price?: number | null
+          id?: string
+          is_active?: boolean
+          symbol: string
+          target_price: number
+          triggered_at?: string | null
+          user_id: string
+        }
+        Update: {
+          condition?: string
+          created_at?: string
+          current_price?: number | null
+          id?: string
+          is_active?: boolean
+          symbol?: string
+          target_price?: number
+          triggered_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           created_at: string
           full_name: string | null
           id: string
+          phone_number: string | null
           updated_at: string
           user_id: string
           username: string | null
@@ -60,6 +190,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          phone_number?: string | null
           updated_at?: string
           user_id: string
           username?: string | null
@@ -69,6 +200,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          phone_number?: string | null
           updated_at?: string
           user_id?: string
           username?: string | null

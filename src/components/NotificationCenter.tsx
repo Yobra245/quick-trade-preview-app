@@ -1,172 +1,138 @@
 
-import React, { useState, useEffect } from 'react';
-import { Bell, X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Bell, Check, CheckCheck, AlertTriangle, TrendingUp, Settings, Zap } from 'lucide-react';
+import { useNotifications } from '@/hooks/useNotifications';
+import { formatDistanceToNow } from 'date-fns';
 
-interface Notification {
-  id: string;
-  type: 'success' | 'error' | 'warning' | 'info';
-  title: string;
-  message: string;
-  timestamp: Date;
-  read: boolean;
-}
+const NotificationCenter = () => {
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
-const NotificationCenter: React.FC = () => {
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: '1',
-      type: 'success',
-      title: 'Trade Executed',
-      message: 'BTC/USDT buy order executed at $45,230',
-      timestamp: new Date(Date.now() - 5 * 60 * 1000),
-      read: false
-    },
-    {
-      id: '2',
-      type: 'warning',
-      title: 'High Volatility Alert',
-      message: 'ETH/USDT showing unusual price movement',
-      timestamp: new Date(Date.now() - 15 * 60 * 1000),
-      read: false
-    },
-    {
-      id: '3',
-      type: 'info',
-      title: 'Market Analysis Update',
-      message: 'New AI insights available for your portfolio',
-      timestamp: new Date(Date.now() - 30 * 60 * 1000),
-      read: true
-    }
-  ]);
-
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  const getIcon = (type: Notification['type']) => {
+  const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'success':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'error':
-        return <AlertCircle className="h-4 w-4 text-red-500" />;
-      case 'warning':
-        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
-      case 'info':
-        return <Info className="h-4 w-4 text-blue-500" />;
+      case 'trade_executed':
+        return <TrendingUp className="h-4 w-4 text-green-600" />;
+      case 'trade_failed':
+        return <AlertTriangle className="h-4 w-4 text-red-600" />;
+      case 'price_alert':
+        return <Bell className="h-4 w-4 text-blue-600" />;
+      case 'risk_warning':
+        return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
+      case 'system':
+        return <Settings className="h-4 w-4 text-gray-600" />;
+      default:
+        return <Zap className="h-4 w-4 text-purple-600" />;
     }
   };
 
-  const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
-    );
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(n => ({ ...n, read: true }))
-    );
-  };
-
-  const removeNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  };
-
-  const formatTimestamp = (timestamp: Date) => {
-    const now = new Date();
-    const diff = now.getTime() - timestamp.getTime();
-    const minutes = Math.floor(diff / 60000);
-    
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
-    const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    return `${days}d ago`;
+  const getNotificationBorderColor = (type: string) => {
+    switch (type) {
+      case 'trade_executed':
+        return 'border-l-green-500';
+      case 'trade_failed':
+        return 'border-l-red-500';
+      case 'price_alert':
+        return 'border-l-blue-500';
+      case 'risk_warning':
+        return 'border-l-yellow-500';
+      case 'system':
+        return 'border-l-gray-500';
+      default:
+        return 'border-l-purple-500';
+    }
   };
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
+    <Card className="w-full max-w-md">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="h-5 w-5" />
+            Notifications
+            {unreadCount > 0 && (
+              <Badge variant="default" className="ml-1">
+                {unreadCount}
+              </Badge>
+            )}
+          </CardTitle>
           {unreadCount > 0 && (
-            <Badge 
-              variant="destructive" 
-              className="absolute -top-1 -right-1 h-5 w-5 p-0 text-xs flex items-center justify-center"
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={markAllAsRead}
+              className="flex items-center gap-1"
             >
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </Badge>
-          )}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h3 className="font-semibold">Notifications</h3>
-          {unreadCount > 0 && (
-            <Button variant="ghost" size="sm" onClick={markAllAsRead}>
+              <CheckCheck className="h-3 w-3" />
               Mark all read
             </Button>
           )}
         </div>
+        <CardDescription>
+          Stay updated with your trading activity and alerts
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="p-0">
         <ScrollArea className="h-96">
           {notifications.length === 0 ? (
             <div className="p-4 text-center text-muted-foreground">
-              No notifications
+              <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p>No notifications yet</p>
+              <p className="text-sm">We'll notify you about important trading events</p>
             </div>
           ) : (
-            <div className="p-2">
+            <div className="space-y-1">
               {notifications.map((notification) => (
-                <Card 
+                <div
                   key={notification.id}
-                  className={`mb-2 cursor-pointer transition-colors ${
-                    !notification.read ? 'bg-blue-50 dark:bg-blue-900/20' : ''
-                  }`}
-                  onClick={() => markAsRead(notification.id)}
+                  className={`p-4 border-l-4 ${getNotificationBorderColor(notification.type)} ${
+                    !notification.read ? 'bg-muted/50' : ''
+                  } hover:bg-muted/30 transition-colors`}
                 >
-                  <CardContent className="p-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-2 flex-1">
-                        {getIcon(notification.type)}
-                        <div className="flex-1 space-y-1">
-                          <div className="flex items-center justify-between">
-                            <p className="font-medium text-sm">{notification.title}</p>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-6 w-6 p-0"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeNotification(notification.id);
-                              }}
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {notification.message}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {formatTimestamp(notification.timestamp)}
-                          </p>
-                        </div>
+                  <div className="flex items-start gap-3">
+                    <div className="mt-0.5">
+                      {getNotificationIcon(notification.type)}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium text-sm">{notification.title}</h4>
+                        {!notification.read && (
+                          <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                        )}
+                      </div>
+                      
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {notification.message}
+                      </p>
+                      
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-xs text-muted-foreground">
+                          {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                        </span>
+                        
+                        {!notification.read && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => markAsRead(notification.id)}
+                            className="h-6 px-2"
+                          >
+                            <Check className="h-3 w-3" />
+                          </Button>
+                        )}
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               ))}
             </div>
           )}
         </ScrollArea>
-      </PopoverContent>
-    </Popover>
+      </CardContent>
+    </Card>
   );
 };
 

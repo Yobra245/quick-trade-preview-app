@@ -1,4 +1,3 @@
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
@@ -11,6 +10,7 @@ import Backtest from "./pages/Backtest";
 import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import LiveTrading from "./pages/LiveTrading";
 import MainLayout from "./components/MainLayout";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -53,6 +53,11 @@ const App = () => (
                   <Route path="/backtest" element={
                     <ProtectedRoute>
                       <MainLayout><Backtest /></MainLayout>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/live-trading" element={
+                    <ProtectedRoute>
+                      <MainLayout><LiveTrading /></MainLayout>
                     </ProtectedRoute>
                   } />
                   <Route path="/admin" element={
