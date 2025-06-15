@@ -1,8 +1,10 @@
 
 import React from 'react';
 import EnhancedChart from './EnhancedChart';
-import { mockChartData } from '@/lib/mockData';
 import { useAppContext } from '@/contexts/AppContext';
+import { useLiveChartData } from '@/hooks/useLiveData';
+import { Card, CardContent } from '@/components/ui/card';
+import { Loader2, WifiOff } from 'lucide-react';
 
 interface PriceChartProps {
   symbol: string;
@@ -16,9 +18,7 @@ const PriceChart: React.FC<PriceChartProps> = ({
   height = 300
 }) => {
   const { selectedMarketType } = useAppContext();
-  
-  // Get mock data for the selected symbol
-  const chartData = mockChartData[symbol as keyof typeof mockChartData] || mockChartData['BTC/USDT'];
+  const { chartData, loading, error } = useLiveChartData(symbol, timeframe);
 
   // Enhanced chart configuration based on market type
   const getColorConfig = () => {
@@ -60,6 +60,46 @@ const PriceChart: React.FC<PriceChartProps> = ({
       `${(value / 1000).toFixed(1)}k` : 
       value.toFixed(1);
   };
+
+  if (loading) {
+    return (
+      <Card className="bg-card border-border w-full" style={{ height: `${height + 100}px` }}>
+        <CardContent className="flex items-center justify-center h-full">
+          <div className="flex flex-col items-center gap-2">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Loading live data for {symbol}...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="bg-card border-border w-full" style={{ height: `${height + 100}px` }}>
+        <CardContent className="flex items-center justify-center h-full">
+          <div className="flex flex-col items-center gap-2">
+            <WifiOff className="h-8 w-8 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">Failed to load live data</p>
+            <p className="text-xs text-muted-foreground">{error}</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!chartData || chartData.length === 0) {
+    return (
+      <Card className="bg-card border-border w-full" style={{ height: `${height + 100}px` }}>
+        <CardContent className="flex items-center justify-center h-full">
+          <div className="flex flex-col items-center gap-2">
+            <WifiOff className="h-8 w-8 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">No data available for {symbol}</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <EnhancedChart 

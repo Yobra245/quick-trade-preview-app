@@ -19,9 +19,10 @@ import PerformanceCard from '@/components/PerformanceCard';
 import AIInsightCard from '@/components/AIInsightCard';
 import RecentExecutions from '@/components/RecentExecutions';
 import MarketSelector from '@/components/MarketSelector';
+import LivePriceDisplay from '@/components/LivePriceDisplay';
+import ConnectionStatus from '@/components/ConnectionStatus';
 import { 
   mockSignals, 
-  mockAssets, 
   mockPerformance, 
   mockInsights, 
   mockExecutions,
@@ -43,31 +44,19 @@ const Index = () => {
     });
   };
 
-  // Get market-specific data based on selected market type
-  const getMarketData = () => {
+  // Get market-specific symbols based on selected market type
+  const getMarketSymbols = () => {
     switch (selectedMarketType) {
       case 'forex':
-        return {
-          assets: [
-            { id: '1', symbol: 'EUR/USD', price: 1.0923, changePercentage24h: 0.12 },
-            { id: '2', symbol: 'GBP/USD', price: 1.2634, changePercentage24h: -0.08 },
-            { id: '3', symbol: 'USD/JPY', price: 149.87, changePercentage24h: 0.15 },
-          ]
-        };
+        return ['EUR/USD', 'GBP/USD', 'USD/JPY'];
       case 'stocks':
-        return {
-          assets: [
-            { id: '1', symbol: 'AAPL', price: 189.95, changePercentage24h: 1.24 },
-            { id: '2', symbol: 'MSFT', price: 378.85, changePercentage24h: 0.67 },
-            { id: '3', symbol: 'GOOGL', price: 142.56, changePercentage24h: -0.34 },
-          ]
-        };
+        return ['AAPL', 'MSFT', 'GOOGL'];
       default:
-        return { assets: mockAssets };
+        return ['BTC/USDT', 'ETH/USDT', 'BNB/USDT'];
     }
   };
 
-  const marketData = getMarketData();
+  const marketSymbols = getMarketSymbols();
 
   return (
     <div className="space-y-6">
@@ -77,7 +66,10 @@ const Index = () => {
           <h2 className="text-lg font-semibold">Market Selection</h2>
           <p className="text-sm text-muted-foreground">Choose your trading market and exchange</p>
         </div>
-        <MarketSelector />
+        <div className="flex items-center gap-3">
+          <ConnectionStatus />
+          <MarketSelector />
+        </div>
       </div>
 
       {/* Header Section */}
@@ -119,28 +111,20 @@ const Index = () => {
         <Card className="w-full sm:w-1/3">
           <CardContent className="p-6">
             <h3 className="text-sm text-muted-foreground mb-4">
-              {selectedMarketType.charAt(0).toUpperCase() + selectedMarketType.slice(1)} Market Summary
+              {selectedMarketType.charAt(0).toUpperCase() + selectedMarketType.slice(1)} Market - Live Prices
             </h3>
             <div className="space-y-3">
-              {marketData.assets.slice(0, 3).map((asset) => (
-                <div key={asset.id} className="flex justify-between items-center">
+              {marketSymbols.map((symbol) => (
+                <div key={symbol} className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-primary"></div>
-                    <span className="font-medium">{asset.symbol}</span>
+                    <span className="font-medium">{symbol}</span>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-sm">
-                      {selectedMarketType === 'forex' ? asset.price.toFixed(4) : formatCurrency(asset.price)}
-                    </span>
-                    <div className={`flex items-center gap-1 ${asset.changePercentage24h >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {asset.changePercentage24h >= 0 ? (
-                        <ArrowUpRight className="h-3 w-3" />
-                      ) : (
-                        <ArrowDownRight className="h-3 w-3" />
-                      )}
-                      <span className="text-sm">{formatPercentage(Math.abs(asset.changePercentage24h))}</span>
-                    </div>
-                  </div>
+                  <LivePriceDisplay 
+                    symbol={symbol} 
+                    showChange={true}
+                    className="text-right"
+                  />
                 </div>
               ))}
             </div>
@@ -150,6 +134,24 @@ const Index = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Live Price Display for Selected Symbol */}
+      <Card className="bg-muted/50">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold">{selectedSymbol}</h3>
+              <p className="text-sm text-muted-foreground">Live Market Data</p>
+            </div>
+            <LivePriceDisplay 
+              symbol={selectedSymbol} 
+              showChange={true}
+              showVolume={true}
+              className="text-right"
+            />
+          </div>
+        </CardContent>
+      </Card>
       
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
