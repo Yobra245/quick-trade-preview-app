@@ -25,7 +25,11 @@ import {
   Clock, 
   CircleDollarSign,
   BarChart3,
-  Shield
+  Shield,
+  User,
+  Briefcase,
+  Activity,
+  Target
 } from "lucide-react";
 import { useMemo, useState } from 'react';
 import ApiKeyModal from './ApiKeyModal';
@@ -44,14 +48,42 @@ export function AppSidebar() {
 
   const navigationItems = useMemo(() => [
     {
-      title: "Dashboard",
+      title: "Overview",
       url: "/",
       icon: Home,
     },
     {
+      title: "Portfolio",
+      url: "/portfolio",
+      icon: Briefcase,
+    },
+    {
+      title: "Trades",
+      url: "/trades",
+      icon: Activity,
+    },
+    {
+      title: "Strategies",
+      url: "/strategies",
+      icon: Target,
+    },
+    {
+      title: "Profile",
+      url: "/profile",
+      icon: User,
+    },
+  ], []);
+
+  const systemItems = useMemo(() => [
+    {
       title: "Backtest",
       url: "/backtest",
       icon: ChartLine,
+    },
+    {
+      title: "Live Trading",
+      url: "/live-trading",
+      icon: TrendingUp,
     },
     {
       title: "Settings",
@@ -85,7 +117,7 @@ export function AppSidebar() {
       disabled: !apiKeysConfigured,
     },
     {
-      title: "Portfolio",
+      title: "Portfolio Analytics",
       url: "#",
       icon: CircleDollarSign,
       disabled: !apiKeysConfigured,
@@ -113,12 +145,37 @@ export function AppSidebar() {
           </div>
         </SidebarHeader>
         <SidebarContent>
-          {/* Main Navigation */}
+          {/* Dashboard Navigation */}
           <SidebarGroup>
-            <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+            <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {navigationItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive(item.url)}
+                      tooltip={item.title}
+                    >
+                      <Link to={item.url}>
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+          
+          <SidebarSeparator />
+          
+          {/* System Navigation */}
+          <SidebarGroup>
+            <SidebarGroupLabel>System</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {systemItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
                       asChild

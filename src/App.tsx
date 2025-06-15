@@ -1,3 +1,4 @@
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
@@ -5,6 +6,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import Index from "./pages/Index";
+import Portfolio from "./pages/Portfolio";
+import Trades from "./pages/Trades";
+import Strategies from "./pages/Strategies";
+import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import Backtest from "./pages/Backtest";
 import Admin from "./pages/Admin";
@@ -43,6 +48,26 @@ const App = () => (
                   <Route path="/" element={
                     <ProtectedRoute>
                       <MainLayout><Index /></MainLayout>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/portfolio" element={
+                    <ProtectedRoute>
+                      <MainLayout><Portfolio /></MainLayout>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/trades" element={
+                    <ProtectedRoute>
+                      <MainLayout><Trades /></MainLayout>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/strategies" element={
+                    <ProtectedRoute>
+                      <MainLayout><Strategies /></MainLayout>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/profile" element={
+                    <ProtectedRoute>
+                      <MainLayout><Profile /></MainLayout>
                     </ProtectedRoute>
                   } />
                   <Route path="/settings" element={
