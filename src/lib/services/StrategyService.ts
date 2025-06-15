@@ -16,7 +16,7 @@ export interface StrategyResult {
 export class StrategyService {
   private static instance: StrategyService;
   private activeStrategies: Map<string, BaseStrategy> = new Map();
-  private strategySubscriptions: Map<string, (result: StrategyResult) => void[]> = new Map();
+  private strategySubscriptions: Map<string, ((result: StrategyResult) => void)[]> = new Map();
 
   private constructor() {}
 
