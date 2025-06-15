@@ -1,105 +1,92 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { toast } from '@/components/ui/use-toast';
-
-export type Theme = 'dark' | 'light' | 'system';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface ApiKeys {
-  exchangeApiKey?: string;
-  exchangeSecretKey?: string;
-  dataProviderApiKey?: string;
+  exchangeApiKey: string;
+  exchangeSecretKey: string;
+  dataProviderApiKey: string;
 }
 
 interface AppContextType {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
   apiKeys: ApiKeys;
   setApiKeys: (keys: ApiKeys) => void;
   apiKeysConfigured: boolean;
-  sidebarCollapsed: boolean;
-  setSidebarCollapsed: (collapsed: boolean) => void;
+  selectedExchange: string;
+  setSelectedExchange: (exchange: string) => void;
+  selectedMarketType: string;
+  setSelectedMarketType: (marketType: string) => void;
+  selectedSymbol: string;
+  setSelectedSymbol: (symbol: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-export const AppProvider = ({ children }: { children: React.ReactNode }) => {
-  // Initialize theme from localStorage or default to system
-  const [theme, setThemeState] = useState<Theme>(() => {
-    const savedTheme = localStorage.getItem('theme') as Theme | null;
-    return savedTheme || 'system';
-  });
-  
-  // Initialize API keys from localStorage
-  const [apiKeys, setApiKeysState] = useState<ApiKeys>(() => {
-    const savedKeys = localStorage.getItem('apiKeys');
-    return savedKeys ? JSON.parse(savedKeys) : {};
+export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [apiKeys, setApiKeysState] = useState<ApiKeys>({
+    exchangeApiKey: '',
+    exchangeSecretKey: '',
+    dataProviderApiKey: ''
   });
 
-  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
-    const savedState = localStorage.getItem('sidebarCollapsed');
-    return savedState ? JSON.parse(savedState) : false;
-  });
+  const [selectedExchange, setSelectedExchange] = useState('binance');
+  const [selectedMarketType, setSelectedMarketType] = useState('crypto');
+  const [selectedSymbol, setSelectedSymbol] = useState('BTC/USDT');
 
-  // Check if API keys are configured
-  const apiKeysConfigured = !!(apiKeys.exchangeApiKey && apiKeys.exchangeSecretKey);
-
-  // Update localStorage when theme changes
-  const setTheme = (newTheme: Theme) => {
-    setThemeState(newTheme);
-    localStorage.setItem('theme', newTheme);
-    
-    // Update document class for theme
-    if (newTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+  // Load API keys from localStorage on mount
+  useEffect(() => {
+    const savedKeys = localStorage.getItem('signalai-api-keys');
+    if (savedKeys) {
+      try {
+        const parsedKeys = JSON.parse(savedKeys);
+        setApiKeysState(parsedKeys);
+      } catch (error) {
+        console.error('Failed to parse saved API keys:', error);
+      }
     }
-    
-    toast({
-      title: "Theme updated",
-      description: `Application theme set to ${newTheme}.`,
-    });
-  };
+  }, []);
 
-  // Update localStorage when API keys change
+  // Save API keys to localStorage whenever they change
   const setApiKeys = (keys: ApiKeys) => {
     setApiKeysState(keys);
-    localStorage.setItem('apiKeys', JSON.stringify(keys));
+    localStorage.setItem('signalai-api-keys', JSON.stringify(keys));
   };
 
-  // Initialize theme based on system preference or saved preference
-  useEffect(() => {
-    if (theme === 'system') {
-      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (isDark) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    } else if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [theme]);
+  // Check if API keys are configured
+  const apiKeysConfigured = Boolean(
+    apiKeys.exchangeApiKey && apiKeys.exchangeSecretKey
+  );
 
-  // Save sidebar state when it changes
+  // Update symbol when market type changes
   useEffect(() => {
-    localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed));
-  }, [sidebarCollapsed]);
+    switch (selectedMarketType) {
+      case 'crypto':
+        setSelectedSymbol('BTC/USDT');
+        break;
+      case 'forex':
+        setSelectedSymbol('EUR/USD');
+        break;
+      case 'stocks':
+        setSelectedSymbol('AAPL');
+        break;
+      default:
+        setSelectedSymbol('BTC/USDT');
+    }
+  }, [selectedMarketType]);
+
+  const value: AppContextType = {
+    apiKeys,
+    setApiKeys,
+    apiKeysConfigured,
+    selectedExchange,
+    setSelectedExchange,
+    selectedMarketType,
+    setSelectedMarketType,
+    selectedSymbol,
+    setSelectedSymbol,
+  };
 
   return (
-    <AppContext.Provider 
-      value={{ 
-        theme, 
-        setTheme, 
-        apiKeys, 
-        setApiKeys, 
-        apiKeysConfigured,
-        sidebarCollapsed,
-        setSidebarCollapsed
-      }}
-    >
+    <AppContext.Provider value={value}>
       {children}
     </AppContext.Provider>
   );

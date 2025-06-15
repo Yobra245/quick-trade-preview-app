@@ -18,6 +18,7 @@ import PriceChart from '@/components/PriceChart';
 import PerformanceCard from '@/components/PerformanceCard';
 import AIInsightCard from '@/components/AIInsightCard';
 import RecentExecutions from '@/components/RecentExecutions';
+import MarketSelector from '@/components/MarketSelector';
 import { 
   mockSignals, 
   mockAssets, 
@@ -29,9 +30,10 @@ import {
 } from '@/lib/mockData';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
+import { useAppContext } from '@/contexts/AppContext';
 
 const Index = () => {
-  const [selectedAsset, setSelectedAsset] = useState('BTC/USDT');
+  const { selectedSymbol, selectedMarketType, selectedExchange } = useAppContext();
   
   // Handler for clicking on a trade signal - show toast notification
   const handleSignalClick = (signalId: string) => {
@@ -41,8 +43,43 @@ const Index = () => {
     });
   };
 
+  // Get market-specific data based on selected market type
+  const getMarketData = () => {
+    switch (selectedMarketType) {
+      case 'forex':
+        return {
+          assets: [
+            { id: '1', symbol: 'EUR/USD', price: 1.0923, changePercentage24h: 0.12 },
+            { id: '2', symbol: 'GBP/USD', price: 1.2634, changePercentage24h: -0.08 },
+            { id: '3', symbol: 'USD/JPY', price: 149.87, changePercentage24h: 0.15 },
+          ]
+        };
+      case 'stocks':
+        return {
+          assets: [
+            { id: '1', symbol: 'AAPL', price: 189.95, changePercentage24h: 1.24 },
+            { id: '2', symbol: 'MSFT', price: 378.85, changePercentage24h: 0.67 },
+            { id: '3', symbol: 'GOOGL', price: 142.56, changePercentage24h: -0.34 },
+          ]
+        };
+      default:
+        return { assets: mockAssets };
+    }
+  };
+
+  const marketData = getMarketData();
+
   return (
     <div className="space-y-6">
+      {/* Market Selector */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 bg-muted/50 rounded-lg">
+        <div>
+          <h2 className="text-lg font-semibold">Market Selection</h2>
+          <p className="text-sm text-muted-foreground">Choose your trading market and exchange</p>
+        </div>
+        <MarketSelector />
+      </div>
+
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row gap-4 justify-between">
         <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20 w-full sm:w-2/3">
@@ -51,7 +88,7 @@ const Index = () => {
               <div>
                 <h1 className="text-3xl font-bold mb-2">Welcome to SignalAI</h1>
                 <p className="text-muted-foreground mb-6">
-                  AI-powered trading signals with automatic execution
+                  AI-powered trading signals with automatic execution across {selectedMarketType}, forex, and stocks
                 </p>
                 <div className="flex gap-3">
                   <Button>
@@ -69,10 +106,10 @@ const Index = () => {
               <div className="hidden md:block p-4 bg-primary/10 rounded-lg border border-primary/20">
                 <div className="flex items-center gap-2 mb-2">
                   <CircleDollarSign className="h-5 w-5 text-primary" />
-                  <span className="text-sm font-medium text-primary">Auto-Trading</span>
+                  <span className="text-sm font-medium text-primary">Multi-Market Trading</span>
                 </div>
-                <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-600">
-                  Beta Feature
+                <Badge variant="secondary" className="bg-green-500/20 text-green-600">
+                  {selectedExchange.toUpperCase()} Connected
                 </Badge>
               </div>
             </div>
@@ -81,16 +118,20 @@ const Index = () => {
         
         <Card className="w-full sm:w-1/3">
           <CardContent className="p-6">
-            <h3 className="text-sm text-muted-foreground mb-4">Market Summary</h3>
+            <h3 className="text-sm text-muted-foreground mb-4">
+              {selectedMarketType.charAt(0).toUpperCase() + selectedMarketType.slice(1)} Market Summary
+            </h3>
             <div className="space-y-3">
-              {mockAssets.slice(0, 3).map((asset) => (
+              {marketData.assets.slice(0, 3).map((asset) => (
                 <div key={asset.id} className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-primary"></div>
                     <span className="font-medium">{asset.symbol}</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="font-mono text-sm">{formatCurrency(asset.price)}</span>
+                    <span className="font-mono text-sm">
+                      {selectedMarketType === 'forex' ? asset.price.toFixed(4) : formatCurrency(asset.price)}
+                    </span>
                     <div className={`flex items-center gap-1 ${asset.changePercentage24h >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {asset.changePercentage24h >= 0 ? (
                         <ArrowUpRight className="h-3 w-3" />
@@ -115,12 +156,12 @@ const Index = () => {
         {/* Left Column */}
         <div className="lg:col-span-2 space-y-6">
           {/* Chart Section */}
-          <PriceChart symbol={selectedAsset} />
+          <PriceChart symbol={selectedSymbol} />
           
           {/* Trade Signals Table */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold">Latest Trade Signals</h3>
+              <h3 className="text-xl font-semibold">Latest Trade Signals - {selectedSymbol}</h3>
               <Link to="/signals" className="text-sm text-primary hover:underline">View All</Link>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
