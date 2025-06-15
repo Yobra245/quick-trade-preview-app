@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Moon, Sun, Laptop } from 'lucide-react';
-import { useAppContext } from '@/contexts/AppContext';
+import { useTheme } from 'next-themes';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,7 +19,7 @@ const ThemeSwitcher: React.FC<ThemeSwitcherProps> = ({
   variant = 'outline',
   size = 'icon'
 }) => {
-  const { theme, setTheme } = useAppContext();
+  const { setTheme } = useTheme();
 
   return (
     <DropdownMenu>
