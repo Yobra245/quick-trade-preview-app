@@ -61,7 +61,7 @@ export const useNotifications = () => {
         .limit(50);
 
       if (error) throw error;
-      setNotifications(data || []);
+      setNotifications((data || []) as Notification[]);
       setUnreadCount(data?.filter(n => !n.read).length || 0);
     } catch (error) {
       console.error('Error fetching notifications:', error);
