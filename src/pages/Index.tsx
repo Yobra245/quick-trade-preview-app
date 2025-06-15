@@ -21,6 +21,7 @@ import RecentExecutions from '@/components/RecentExecutions';
 import MarketSelector from '@/components/MarketSelector';
 import LivePriceDisplay from '@/components/LivePriceDisplay';
 import ConnectionStatus from '@/components/ConnectionStatus';
+import StrategySignalPanel from '@/components/StrategySignalPanel';
 import { 
   mockSignals, 
   mockPerformance, 
@@ -159,6 +160,9 @@ const Index = () => {
         <div className="lg:col-span-2 space-y-6">
           {/* Chart Section */}
           <PriceChart symbol={selectedSymbol} />
+          
+          {/* Live Strategy Signals */}
+          <StrategySignalPanel />
           
           {/* Trade Signals Table */}
           <div>
