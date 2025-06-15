@@ -1,6 +1,7 @@
 
 import React from 'react';
 import UserTrades from '@/components/UserTrades';
+import MarketSelector from '@/components/MarketSelector';
 
 const Trades = () => {
   return (
@@ -10,6 +11,10 @@ const Trades = () => {
         <p className="text-muted-foreground mt-2">
           View and manage your trading history and active positions.
         </p>
+      </div>
+      
+      <div className="mb-6">
+        <MarketSelector />
       </div>
       
       <UserTrades />
