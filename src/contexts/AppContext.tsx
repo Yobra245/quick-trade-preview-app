@@ -1,92 +1,79 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
-interface ApiKeys {
-  exchangeApiKey: string;
-  exchangeSecretKey: string;
-  dataProviderApiKey: string;
-}
+import { dataService } from '@/lib/services/DataService';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AppContextType {
-  apiKeys: ApiKeys;
-  setApiKeys: (keys: ApiKeys) => void;
   apiKeysConfigured: boolean;
   selectedExchange: string;
-  setSelectedExchange: (exchange: string) => void;
-  selectedMarketType: string;
-  setSelectedMarketType: (marketType: string) => void;
   selectedSymbol: string;
+  setSelectedExchange: (exchange: string) => void;
   setSelectedSymbol: (symbol: string) => void;
+  refreshApiStatus: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [apiKeys, setApiKeysState] = useState<ApiKeys>({
-    exchangeApiKey: '',
-    exchangeSecretKey: '',
-    dataProviderApiKey: ''
-  });
-
+  const { user } = useAuth();
+  const [apiKeysConfigured, setApiKeysConfigured] = useState(false);
   const [selectedExchange, setSelectedExchange] = useState('binance');
-  const [selectedMarketType, setSelectedMarketType] = useState('crypto');
   const [selectedSymbol, setSelectedSymbol] = useState('BTC/USDT');
 
-  // Load API keys from localStorage on mount
-  useEffect(() => {
-    const savedKeys = localStorage.getItem('signalai-api-keys');
-    if (savedKeys) {
-      try {
-        const parsedKeys = JSON.parse(savedKeys);
-        setApiKeysState(parsedKeys);
-      } catch (error) {
-        console.error('Failed to parse saved API keys:', error);
-      }
-    }
-  }, []);
-
-  // Save API keys to localStorage whenever they change
-  const setApiKeys = (keys: ApiKeys) => {
-    setApiKeysState(keys);
-    localStorage.setItem('signalai-api-keys', JSON.stringify(keys));
-  };
-
   // Check if API keys are configured
-  const apiKeysConfigured = Boolean(
-    apiKeys.exchangeApiKey && apiKeys.exchangeSecretKey
-  );
-
-  // Update symbol when market type changes
-  useEffect(() => {
-    switch (selectedMarketType) {
-      case 'crypto':
-        setSelectedSymbol('BTC/USDT');
-        break;
-      case 'forex':
-        setSelectedSymbol('EUR/USD');
-        break;
-      case 'stocks':
-        setSelectedSymbol('AAPL');
-        break;
-      default:
-        setSelectedSymbol('BTC/USDT');
+  const checkApiKeys = async () => {
+    if (!user) {
+      setApiKeysConfigured(false);
+      return;
     }
-  }, [selectedMarketType]);
 
-  const value: AppContextType = {
-    apiKeys,
-    setApiKeys,
-    apiKeysConfigured,
-    selectedExchange,
-    setSelectedExchange,
-    selectedMarketType,
-    setSelectedMarketType,
-    selectedSymbol,
-    setSelectedSymbol,
+    try {
+      const { data, error } = await supabase
+        .from('api_credentials')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .limit(1);
+
+      setApiKeysConfigured(!error && data && data.length > 0);
+      
+      // Initialize data service if API keys exist
+      if (!error && data && data.length > 0) {
+        await dataService.initialize(user.id);
+      }
+    } catch (error) {
+      console.error('Error checking API keys:', error);
+      setApiKeysConfigured(false);
+    }
   };
+
+  const refreshApiStatus = () => {
+    checkApiKeys();
+  };
+
+  useEffect(() => {
+    checkApiKeys();
+  }, [user]);
+
+  // Initialize data service when user changes
+  useEffect(() => {
+    if (user) {
+      dataService.initialize(user.id);
+    }
+  }, [user]);
 
   return (
-    <AppContext.Provider value={value}>
+    <AppContext.Provider
+      value={{
+        apiKeysConfigured,
+        selectedExchange,
+        selectedSymbol,
+        setSelectedExchange,
+        setSelectedSymbol,
+        refreshApiStatus
+      }}
+    >
       {children}
     </AppContext.Provider>
   );

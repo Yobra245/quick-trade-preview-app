@@ -9,6 +9,75 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      api_credentials: {
+        Row: {
+          api_key: string
+          created_at: string
+          exchange: string
+          id: string
+          is_active: boolean | null
+          passphrase: string | null
+          sandbox_mode: boolean | null
+          secret_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          api_key: string
+          created_at?: string
+          exchange: string
+          id?: string
+          is_active?: boolean | null
+          passphrase?: string | null
+          sandbox_mode?: boolean | null
+          secret_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          api_key?: string
+          created_at?: string
+          exchange?: string
+          id?: string
+          is_active?: boolean | null
+          passphrase?: string | null
+          sandbox_mode?: boolean | null
+          secret_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      api_usage_log: {
+        Row: {
+          created_at: string
+          endpoint: string
+          exchange: string
+          id: string
+          last_request_at: string
+          request_count: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          exchange: string
+          id?: string
+          last_request_at?: string
+          request_count?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          exchange?: string
+          id?: string
+          last_request_at?: string
+          request_count?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       live_orders: {
         Row: {
           average_fill_price: number | null
@@ -69,6 +138,39 @@ export type Database = {
         }
         Relationships: []
       }
+      market_data_cache: {
+        Row: {
+          change_24h: number | null
+          change_percentage_24h: number | null
+          exchange: string
+          id: string
+          price: number
+          symbol: string
+          timestamp: string
+          volume_24h: number | null
+        }
+        Insert: {
+          change_24h?: number | null
+          change_percentage_24h?: number | null
+          exchange: string
+          id?: string
+          price: number
+          symbol: string
+          timestamp?: string
+          volume_24h?: number | null
+        }
+        Update: {
+          change_24h?: number | null
+          change_percentage_24h?: number | null
+          exchange?: string
+          id?: string
+          price?: number
+          symbol?: string
+          timestamp?: string
+          volume_24h?: number | null
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
@@ -106,7 +208,9 @@ export type Database = {
         Row: {
           average_price: number | null
           current_value: number | null
+          exchange: string | null
           id: string
+          last_sync_at: string | null
           last_updated: string
           profit_loss: number | null
           profit_loss_percentage: number | null
@@ -117,7 +221,9 @@ export type Database = {
         Insert: {
           average_price?: number | null
           current_value?: number | null
+          exchange?: string | null
           id?: string
+          last_sync_at?: string | null
           last_updated?: string
           profit_loss?: number | null
           profit_loss_percentage?: number | null
@@ -128,7 +234,9 @@ export type Database = {
         Update: {
           average_price?: number | null
           current_value?: number | null
+          exchange?: string | null
           id?: string
+          last_sync_at?: string | null
           last_updated?: string
           profit_loss?: number | null
           profit_loss_percentage?: number | null
@@ -174,6 +282,48 @@ export type Database = {
         }
         Relationships: []
       }
+      price_history: {
+        Row: {
+          close_price: number
+          created_at: string
+          exchange: string
+          high_price: number
+          id: string
+          low_price: number
+          open_price: number
+          symbol: string
+          timeframe: string
+          timestamp: string
+          volume: number
+        }
+        Insert: {
+          close_price: number
+          created_at?: string
+          exchange: string
+          high_price: number
+          id?: string
+          low_price: number
+          open_price: number
+          symbol: string
+          timeframe: string
+          timestamp: string
+          volume: number
+        }
+        Update: {
+          close_price?: number
+          created_at?: string
+          exchange?: string
+          high_price?: number
+          id?: string
+          low_price?: number
+          open_price?: number
+          symbol?: string
+          timeframe?: string
+          timestamp?: string
+          volume?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -210,43 +360,58 @@ export type Database = {
       trades: {
         Row: {
           created_at: string
+          exchange: string | null
           exchange_order_id: string | null
+          executed_price: number | null
+          fees: number | null
           filled_at: string | null
           id: string
+          order_type: string | null
           price: number
           quantity: number
           side: string
           status: string
           strategy_id: string | null
           symbol: string
+          time_in_force: string | null
           total_amount: number
           user_id: string
         }
         Insert: {
           created_at?: string
+          exchange?: string | null
           exchange_order_id?: string | null
+          executed_price?: number | null
+          fees?: number | null
           filled_at?: string | null
           id?: string
+          order_type?: string | null
           price: number
           quantity: number
           side: string
           status?: string
           strategy_id?: string | null
           symbol: string
+          time_in_force?: string | null
           total_amount: number
           user_id: string
         }
         Update: {
           created_at?: string
+          exchange?: string | null
           exchange_order_id?: string | null
+          executed_price?: number | null
+          fees?: number | null
           filled_at?: string | null
           id?: string
+          order_type?: string | null
           price?: number
           quantity?: number
           side?: string
           status?: string
           strategy_id?: string | null
           symbol?: string
+          time_in_force?: string | null
           total_amount?: number
           user_id?: string
         }
@@ -332,7 +497,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_market_data_cache: {
+        Args: {
+          p_symbol: string
+          p_exchange: string
+          p_price: number
+          p_volume_24h?: number
+          p_change_24h?: number
+          p_change_percentage_24h?: number
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
