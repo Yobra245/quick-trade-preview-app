@@ -171,10 +171,10 @@ export class ExchangeService {
       await supabase.rpc('update_market_data_cache', {
         p_symbol: marketPrice.symbol,
         p_exchange: this.exchange || 'binance',
-        p_price: marketPrice.price.toString(),
-        p_volume_24h: marketPrice.volume24h.toString(),
-        p_change_24h: marketPrice.change24h.toString(),
-        p_change_percentage_24h: marketPrice.changePercentage24h.toString()
+        p_price: marketPrice.price,
+        p_volume_24h: marketPrice.volume24h,
+        p_change_24h: marketPrice.change24h,
+        p_change_percentage_24h: marketPrice.changePercentage24h
       });
     } catch (error) {
       console.error('Error caching market data:', error);
