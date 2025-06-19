@@ -73,21 +73,26 @@ export class ExchangeService {
     }
   }
 
-  // Fetch real market prices from Binance API
+  // Fetch real market prices using our Supabase proxy
   async getMarketPrice(symbol: string): Promise<MarketPrice | null> {
     try {
-      // Convert symbol format for Binance (e.g., BTC/USDT -> BTCUSDT)
-      const binanceSymbol = symbol.replace('/', '');
+      console.log(`Fetching market price for ${symbol} via proxy`);
       
-      const response = await fetch(
-        `https://api.binance.com/api/v3/ticker/24hr?symbol=${binanceSymbol}`
-      );
+      const { data, error } = await supabase.functions.invoke('binance-proxy', {
+        body: JSON.stringify({
+          endpoint: 'ticker',
+          symbol: symbol
+        })
+      });
       
-      if (!response.ok) {
-        throw new Error(`Binance API error: ${response.status}`);
+      if (error) {
+        console.error('Proxy error:', error);
+        throw error;
       }
       
-      const data = await response.json();
+      if (!data || data.error) {
+        throw new Error(data?.error || 'No data received from proxy');
+      }
       
       const marketPrice: MarketPrice = {
         symbol,
@@ -120,19 +125,32 @@ export class ExchangeService {
       .map(result => result.value);
   }
 
-  // Fetch historical OHLCV data
+  // Fetch historical OHLCV data using our Supabase proxy
   async getHistoricalData(symbol: string, interval: string = '1h', limit: number = 100) {
     try {
-      const binanceSymbol = symbol.replace('/', '');
-      const response = await fetch(
-        `https://api.binance.com/api/v3/klines?symbol=${binanceSymbol}&interval=${interval}&limit=${limit}`
-      );
+      console.log(`Fetching historical data for ${symbol} via proxy`);
       
-      if (!response.ok) {
-        throw new Error(`Binance API error: ${response.status}`);
+      const { data, error } = await supabase.functions.invoke('binance-proxy', {
+        body: JSON.stringify({
+          endpoint: 'klines',
+          symbol: symbol,
+          interval: interval,
+          limit: limit.toString()
+        })
+      });
+      
+      if (error) {
+        console.error('Proxy error:', error);
+        throw error;
       }
       
-      const data = await response.json();
+      if (!data || data.error) {
+        throw new Error(data?.error || 'No data received from proxy');
+      }
+      
+      if (!Array.isArray(data)) {
+        throw new Error('Invalid data format received from proxy');
+      }
       
       return data.map((kline: any[]) => ({
         timestamp: kline[0],
