@@ -196,11 +196,11 @@ export class RealDataService {
       const insertData = data.map(candle => ({
         symbol,
         exchange: 'binance',
-        open_price: candle.open.toString(),
-        high_price: candle.high.toString(),
-        low_price: candle.low.toString(),
-        close_price: candle.close.toString(),
-        volume: candle.volume.toString(),
+        open_price: candle.open,
+        high_price: candle.high,
+        low_price: candle.low,
+        close_price: candle.close,
+        volume: candle.volume,
         timeframe,
         timestamp: new Date(candle.timestamp).toISOString()
       }));
@@ -234,11 +234,11 @@ export class RealDataService {
 
       return data.map(row => ({
         timestamp: new Date(row.timestamp).getTime(),
-        open: parseFloat(row.open_price),
-        high: parseFloat(row.high_price),
-        low: parseFloat(row.low_price),
-        close: parseFloat(row.close_price),
-        volume: parseFloat(row.volume)
+        open: parseFloat(row.open_price.toString()),
+        high: parseFloat(row.high_price.toString()),
+        low: parseFloat(row.low_price.toString()),
+        close: parseFloat(row.close_price.toString()),
+        volume: parseFloat(row.volume.toString())
       })).reverse(); // Reverse to get chronological order
     } catch (error) {
       console.error('Error getting cached chart data:', error);

@@ -165,7 +165,7 @@ export class ExchangeService {
     };
   }
 
-  // Cache market data in Supabase
+  // Cache market data in Supabase using RPC function
   private async cacheMarketData(marketPrice: MarketPrice) {
     try {
       await supabase.rpc('update_market_data_cache', {
@@ -195,10 +195,10 @@ export class ExchangeService {
 
       return {
         symbol: data.symbol,
-        price: parseFloat(data.price),
-        change24h: parseFloat(data.change_24h || '0'),
-        changePercentage24h: parseFloat(data.change_percentage_24h || '0'),
-        volume24h: parseFloat(data.volume_24h || '0'),
+        price: parseFloat(data.price.toString()),
+        change24h: parseFloat(data.change_24h?.toString() || '0'),
+        changePercentage24h: parseFloat(data.change_percentage_24h?.toString() || '0'),
+        volume24h: parseFloat(data.volume_24h?.toString() || '0'),
         timestamp: new Date(data.timestamp).getTime()
       };
     } catch (error) {
