@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { dataService } from '@/lib/services/DataService';
 import { useAuth } from '@/hooks/useAuth';
@@ -8,8 +7,10 @@ interface AppContextType {
   apiKeysConfigured: boolean;
   selectedExchange: string;
   selectedSymbol: string;
+  selectedMarketType: string;
   setSelectedExchange: (exchange: string) => void;
   setSelectedSymbol: (symbol: string) => void;
+  setSelectedMarketType: (marketType: string) => void;
   refreshApiStatus: () => void;
 }
 
@@ -20,6 +21,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [apiKeysConfigured, setApiKeysConfigured] = useState(false);
   const [selectedExchange, setSelectedExchange] = useState('binance');
   const [selectedSymbol, setSelectedSymbol] = useState('BTC/USDT');
+  const [selectedMarketType, setSelectedMarketType] = useState('crypto');
 
   // Check if API keys are configured
   const checkApiKeys = async () => {
@@ -69,8 +71,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         apiKeysConfigured,
         selectedExchange,
         selectedSymbol,
+        selectedMarketType,
         setSelectedExchange,
         setSelectedSymbol,
+        setSelectedMarketType,
         refreshApiStatus
       }}
     >
