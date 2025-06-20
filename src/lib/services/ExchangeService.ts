@@ -73,25 +73,40 @@ export class ExchangeService {
     }
   }
 
-  // Fetch real market prices using our Supabase proxy
+  // Convert our symbol format to Binance format
+  private formatSymbolForBinance(symbol: string): string {
+    // Convert symbols like BTC/USDT to BTCUSDT for Binance
+    return symbol.replace('/', '');
+  }
+
+  // Fetch real market prices using our Supabase proxy with URL parameters
   async getMarketPrice(symbol: string): Promise<MarketPrice | null> {
     try {
       console.log(`Fetching market price for ${symbol} via proxy`);
       
-      const { data, error } = await supabase.functions.invoke('binance-proxy', {
-        body: JSON.stringify({
-          endpoint: 'ticker',
-          symbol: symbol
-        })
+      const binanceSymbol = this.formatSymbolForBinance(symbol);
+      const url = new URL(`${supabase.supabaseUrl}/functions/v1/binance-proxy`);
+      url.searchParams.set('endpoint', 'ticker');
+      url.searchParams.set('symbol', binanceSymbol);
+      
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${supabase.supabaseKey}`,
+          'apikey': supabase.supabaseKey,
+        }
       });
       
-      if (error) {
-        console.error('Proxy error:', error);
-        throw error;
+      if (!response.ok) {
+        console.error('Proxy response not ok:', response.status, response.statusText);
+        throw new Error(`Proxy returned ${response.status}`);
       }
       
-      if (!data || data.error) {
-        throw new Error(data?.error || 'No data received from proxy');
+      const data = await response.json();
+      
+      if (data.error) {
+        console.error('Proxy returned error:', data.error);
+        throw new Error(data.error);
       }
       
       const marketPrice: MarketPrice = {
@@ -125,27 +140,36 @@ export class ExchangeService {
       .map(result => result.value);
   }
 
-  // Fetch historical OHLCV data using our Supabase proxy
+  // Fetch historical OHLCV data using our Supabase proxy with URL parameters
   async getHistoricalData(symbol: string, interval: string = '1h', limit: number = 100) {
     try {
       console.log(`Fetching historical data for ${symbol} via proxy`);
       
-      const { data, error } = await supabase.functions.invoke('binance-proxy', {
-        body: JSON.stringify({
-          endpoint: 'klines',
-          symbol: symbol,
-          interval: interval,
-          limit: limit.toString()
-        })
+      const binanceSymbol = this.formatSymbolForBinance(symbol);
+      const url = new URL(`${supabase.supabaseUrl}/functions/v1/binance-proxy`);
+      url.searchParams.set('endpoint', 'klines');
+      url.searchParams.set('symbol', binanceSymbol);
+      url.searchParams.set('interval', interval);
+      url.searchParams.set('limit', limit.toString());
+      
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${supabase.supabaseKey}`,
+          'apikey': supabase.supabaseKey,
+        }
       });
       
-      if (error) {
-        console.error('Proxy error:', error);
-        throw error;
+      if (!response.ok) {
+        console.error('Proxy response not ok:', response.status, response.statusText);
+        throw new Error(`Proxy returned ${response.status}`);
       }
       
-      if (!data || data.error) {
-        throw new Error(data?.error || 'No data received from proxy');
+      const data = await response.json();
+      
+      if (data.error) {
+        console.error('Proxy returned error:', data.error);
+        throw new Error(data.error);
       }
       
       if (!Array.isArray(data)) {
