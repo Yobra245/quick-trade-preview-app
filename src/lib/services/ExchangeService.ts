@@ -85,15 +85,15 @@ export class ExchangeService {
       console.log(`Fetching market price for ${symbol} via proxy`);
       
       const binanceSymbol = this.formatSymbolForBinance(symbol);
-      const url = new URL(`${supabase.supabaseUrl}/functions/v1/binance-proxy`);
+      const url = new URL(`https://sqmuydwkslyfuucjwjry.supabase.co/functions/v1/binance-proxy`);
       url.searchParams.set('endpoint', 'ticker');
       url.searchParams.set('symbol', binanceSymbol);
       
       const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${supabase.supabaseKey}`,
-          'apikey': supabase.supabaseKey,
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxbXV5ZHdrc2x5ZnV1Y2p3anJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5NzU0OTMsImV4cCI6MjA2NTU1MTQ5M30.Od4IHI0O2YQgSbywILTUOuvagSPd4jVgmZX1gJQGwXQ`,
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxbXV5ZHdrc2x5ZnV1Y2p3anJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5NzU0OTMsImV4cCI6MjA2NTU1MTQ5M30.Od4IHI0O2YQgSbywILTUOuvagSPd4jVgmZX1gJQGwXQ',
         }
       });
       
@@ -146,7 +146,7 @@ export class ExchangeService {
       console.log(`Fetching historical data for ${symbol} via proxy`);
       
       const binanceSymbol = this.formatSymbolForBinance(symbol);
-      const url = new URL(`${supabase.supabaseUrl}/functions/v1/binance-proxy`);
+      const url = new URL(`https://sqmuydwkslyfuucjwjry.supabase.co/functions/v1/binance-proxy`);
       url.searchParams.set('endpoint', 'klines');
       url.searchParams.set('symbol', binanceSymbol);
       url.searchParams.set('interval', interval);
@@ -155,8 +155,8 @@ export class ExchangeService {
       const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${supabase.supabaseKey}`,
-          'apikey': supabase.supabaseKey,
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxbXV5ZHdrc2x5ZnV1Y2p3anJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5NzU0OTMsImV4cCI6MjA2NTU1MTQ5M30.Od4IHI0O2YQgSbywILTUOuvagSPd4jVgmZX1gJQGwXQ`,
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxbXV5ZHdrc2x5ZnV1Y2p3anJ5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk5NzU0OTMsImV4cCI6MjA2NTU1MTQ5M30.Od4IHI0O2YQgSbywILTUOuvagSPd4jVgmZX1gJQGwXQ',
         }
       });
       
