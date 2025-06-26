@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,8 +44,8 @@ const TradingView: React.FC<TradingViewProps> = ({
     'UNI/USDT', 'LINK/USDT', 'AAVE/USDT', 'COMP/USDT'
   ];
 
-  // Quick interval selector with more professional options
-  const quickIntervals: TimeframeType[] = ['1m', '3m', '5m', '15m', '30m', '1h', '2h', '4h', '1d'];
+  // Quick interval selector with correct TimeframeType values
+  const quickIntervals: TimeframeType[] = ['1m', '5m', '15m', '30m', '1h', '2h', '4h', '1d'];
 
   const handleFullscreen = () => {
     if (!isFullscreen) {

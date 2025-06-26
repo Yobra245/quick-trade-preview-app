@@ -12,6 +12,8 @@ import TechnicalIndicatorsPanel from './TechnicalIndicatorsPanel';
 import DrawingTools from './DrawingTools';
 import PatternAlerts from './PatternAlerts';
 import AdvancedChartControls from './AdvancedChartControls';
+import OrderBookWidget from './OrderBookWidget';
+import TradingInterface from './TradingInterface';
 import { Loader2, Wifi, WifiOff, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -114,28 +116,30 @@ const RealTimeChart: React.FC<RealTimeChartProps> = ({
   };
 
   const handleZoomIn = () => {
-    // Implement zoom in logic
     console.log('Zoom in');
   };
 
   const handleZoomOut = () => {
-    // Implement zoom out logic
     console.log('Zoom out');
   };
 
   const handleResetZoom = () => {
-    // Implement reset zoom logic
     console.log('Reset zoom');
   };
 
   const handleToggleFullscreen = () => {
-    // Implement fullscreen toggle
     console.log('Toggle fullscreen');
   };
 
   // Pattern alert handlers
   const handleDismissPattern = (patternId: string) => {
     setDismissedPatterns(prev => [...prev, patternId]);
+  };
+
+  // Trading handlers
+  const handlePlaceOrder = (order: any) => {
+    console.log('Placing order:', order);
+    // Implement order placement logic
   };
 
   // Get connection status styling
@@ -167,18 +171,18 @@ const RealTimeChart: React.FC<RealTimeChartProps> = ({
 
   if (loading && chartData.length === 0) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         <div className="lg:col-span-3">
           <Card className="bg-card border-border">
             <CardContent className="flex items-center justify-center" style={{ height: `${height}px` }}>
               <div className="flex flex-col items-center gap-4">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">Loading professional trading chart...</p>
+                <p className="text-sm text-muted-foreground">Loading professional trading interface...</p>
               </div>
             </CardContent>
           </Card>
         </div>
-        <div className="space-y-4">
+        <div className="lg:col-span-2 space-y-4">
           <Card>
             <CardContent className="p-4">
               <div className="animate-pulse space-y-2">
@@ -209,7 +213,7 @@ const RealTimeChart: React.FC<RealTimeChartProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
       {/* Main Chart Area */}
       <div className="lg:col-span-3">
         <Card className="bg-card border-border relative overflow-hidden">
@@ -293,8 +297,22 @@ const RealTimeChart: React.FC<RealTimeChartProps> = ({
         </Card>
       </div>
 
-      {/* Side Panel */}
-      <div className="space-y-4">
+      {/* Side Panel with Order Book and Trading Interface */}
+      <div className="lg:col-span-2 space-y-4">
+        {/* Trading Interface */}
+        <TradingInterface
+          symbol={symbol}
+          currentPrice={currentPrice}
+          availableBalance={10000} // Mock balance
+          onPlaceOrder={handlePlaceOrder}
+        />
+
+        {/* Order Book Widget */}
+        <OrderBookWidget
+          symbol={symbol}
+          currentPrice={currentPrice}
+        />
+
         {/* Technical Indicators Panel */}
         {chartSettings.showIndicators && (
           <TechnicalIndicatorsPanel 
@@ -333,36 +351,6 @@ const RealTimeChart: React.FC<RealTimeChartProps> = ({
             ) : (
               <p className="text-xs text-muted-foreground">No patterns detected</p>
             )}
-          </CardContent>
-        </Card>
-        
-        {/* Market Stats */}
-        <Card>
-          <CardHeader className="pb-3">
-            <h4 className="text-sm font-semibold">Market Stats</h4>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">24h Volume</span>
-              <span className="font-mono">
-                {chartData.length > 0 ? 
-                  `${(chartData.reduce((sum, c) => sum + c.volume, 0) / 1000000).toFixed(2)}M` 
-                  : '0.00M'
-                }
-              </span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">24h High</span>
-              <span className="font-mono text-green-500">
-                ${chartData.length > 0 ? Math.max(...chartData.map(c => c.high)).toFixed(2) : '0.00'}
-              </span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">24h Low</span>
-              <span className="font-mono text-red-500">
-                ${chartData.length > 0 ? Math.min(...chartData.map(c => c.low)).toFixed(2) : '0.00'}
-              </span>
-            </div>
           </CardContent>
         </Card>
       </div>
