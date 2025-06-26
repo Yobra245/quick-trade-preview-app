@@ -1,108 +1,26 @@
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { QueryClient } from 'react-query';
+import Index from './pages/Index';
+import LiveTrading from './pages/LiveTrading';
+import Strategies from './pages/Strategies';
+import TradingChart from './pages/TradingChart';
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "next-themes";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import Index from "./pages/Index";
-import Portfolio from "./pages/Portfolio";
-import Trades from "./pages/Trades";
-import Strategies from "./pages/Strategies";
-import Profile from "./pages/Profile";
-import Settings from "./pages/Settings";
-import Backtest from "./pages/Backtest";
-import Admin from "./pages/Admin";
-import Auth from "./pages/Auth";
-import NotFound from "./pages/NotFound";
-import LiveTrading from "./pages/LiveTrading";
-import MainLayout from "./components/MainLayout";
-import ErrorBoundary from "./components/ErrorBoundary";
-import ProtectedRoute from "./components/ProtectedRoute";
-import { AppProvider } from "./contexts/AppContext";
-import { AuthProvider } from "./hooks/useAuth";
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 3,
-      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
-    },
-  },
-});
-
-const App = () => (
-  <ErrorBoundary>
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <AuthProvider>
-          <AppProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/auth" element={<Auth />} />
-                  <Route path="/" element={
-                    <ProtectedRoute>
-                      <MainLayout><Index /></MainLayout>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/portfolio" element={
-                    <ProtectedRoute>
-                      <MainLayout><Portfolio /></MainLayout>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/trades" element={
-                    <ProtectedRoute>
-                      <MainLayout><Trades /></MainLayout>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/strategies" element={
-                    <ProtectedRoute>
-                      <MainLayout><Strategies /></MainLayout>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/profile" element={
-                    <ProtectedRoute>
-                      <MainLayout><Profile /></MainLayout>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings" element={
-                    <ProtectedRoute>
-                      <MainLayout><Settings /></MainLayout>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/backtest" element={
-                    <ProtectedRoute>
-                      <MainLayout><Backtest /></MainLayout>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/live-trading" element={
-                    <ProtectedRoute>
-                      <MainLayout><LiveTrading /></MainLayout>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/admin" element={
-                    <ProtectedRoute>
-                      <MainLayout><Admin /></MainLayout>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="*" element={
-                    <ProtectedRoute>
-                      <MainLayout><NotFound /></MainLayout>
-                    </ProtectedRoute>
-                  } />
-                </Routes>
-              </BrowserRouter>
-            </TooltipProvider>
-          </AppProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
-  </ErrorBoundary>
-);
+function App() {
+  return (
+    <QueryClient>
+      <BrowserRouter>
+        <div className="min-h-screen bg-background">
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/live-trading" element={<LiveTrading />} />
+            <Route path="/strategies" element={<Strategies />} />
+            <Route path="/trading-chart" element={<TradingChart />} />
+          </Routes>
+        </div>
+      </BrowserRouter>
+    </QueryClient>
+  );
+}
 
 export default App;

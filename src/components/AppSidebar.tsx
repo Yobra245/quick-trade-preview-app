@@ -1,292 +1,81 @@
-
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React from "react";
+import { useLocation, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { useAppContext } from "@/contexts/AppContext";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarSeparator,
-} from "@/components/ui/sidebar";
-import { 
-  Home, 
-  Settings, 
-  ChartLine, 
-  KeyRound,
-  TrendingUp, 
-  Clock, 
-  CircleDollarSign,
-  BarChart3,
-  Shield,
-  User,
-  Briefcase,
-  Activity,
-  Target
-} from "lucide-react";
-import { useMemo, useState } from 'react';
-import ApiKeyModal from './ApiKeyModal';
-import MarketsModal from './MarketsModal';
-import ThemeSwitcher from './ThemeSwitcher';
-import NotificationCenter from './NotificationCenter';
-import ConnectionStatus from './ConnectionStatus';
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
-import { Avatar, AvatarFallback } from './ui/avatar';
+
+import { BarChart3, TrendingUp, Target, User, Settings, Home, Activity } from "lucide-react";
 
 export function AppSidebar() {
   const location = useLocation();
-  const { apiKeysConfigured } = useAppContext();
-  const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
-  const [marketsModalOpen, setMarketsModalOpen] = useState(false);
 
-  const navigationItems = useMemo(() => [
+  const menuItems = [
     {
       title: "Overview",
       url: "/",
       icon: Home,
-    },
-    {
-      title: "Portfolio",
-      url: "/portfolio",
-      icon: Briefcase,
-    },
-    {
-      title: "Trades",
-      url: "/trades",
-      icon: Activity,
-    },
-    {
-      title: "Strategies",
-      url: "/strategies",
-      icon: Target,
-    },
-    {
-      title: "Profile",
-      url: "/profile",
-      icon: User,
-    },
-  ], []);
-
-  const systemItems = useMemo(() => [
-    {
-      title: "Backtest",
-      url: "/backtest",
-      icon: ChartLine,
+      description: "Dashboard overview of your trading activity"
     },
     {
       title: "Live Trading",
       url: "/live-trading",
       icon: TrendingUp,
+      description: "Execute trades and monitor markets in real-time"
+    },
+    {
+      title: "Strategies",
+      url: "/strategies",
+      icon: Target,
+      description: "Configure and monitor your trading strategies"
+    },
+    {
+      title: "Account",
+      url: "/account",
+      icon: User,
+      description: "Manage your profile and API credentials"
     },
     {
       title: "Settings",
       url: "/settings",
       icon: Settings,
+      description: "Customize your trading experience"
     },
     {
-      title: "Admin",
-      url: "/admin",
-      icon: Shield,
+      title: "Advanced Charts",
+      url: "/trading-chart",
+      icon: Activity,
+      description: "Professional real-time trading charts"
     },
-  ], []);
-
-  const toolItems = useMemo(() => [
-    {
-      title: "Live Markets",
-      action: () => setMarketsModalOpen(true),
-      icon: BarChart3,
-      disabled: false,
-    },
-    {
-      title: "Market Analysis",
-      url: "#",
-      icon: TrendingUp,
-      disabled: !apiKeysConfigured,
-    },
-    {
-      title: "Trading History",
-      url: "#",
-      icon: Clock,
-      disabled: !apiKeysConfigured,
-    },
-    {
-      title: "Portfolio Analytics",
-      url: "#",
-      icon: CircleDollarSign,
-      disabled: !apiKeysConfigured,
-    },
-  ], [apiKeysConfigured]);
-
-  const isActive = (url: string) => {
-    return location.pathname === url;
-  };
+  ];
 
   return (
-    <>
-      <Sidebar variant="sidebar">
-        <SidebarHeader className="flex flex-col items-center justify-between p-4">
-          <Link to="/" className="flex items-center gap-2 py-2">
-            <div className="bg-gradient-to-br from-primary to-primary/80 rounded-md p-1">
-              <ChartLine className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold text-foreground">SignalAI</span>
-            <span className="hidden md:inline-flex text-xs font-semibold bg-secondary px-2 py-0.5 rounded">BETA</span>
+    <div className="flex flex-col h-full bg-secondary border-r">
+      <div className="px-4 py-6">
+        <Link to="/" className="flex items-center space-x-2">
+          <BarChart3 className="h-6 w-6 text-primary" />
+          <span className="text-lg font-bold">Trading App</span>
+        </Link>
+      </div>
+      <div className="flex-1 py-4 space-y-1">
+        {menuItems.map((item) => (
+          <Link
+            key={item.title}
+            to={item.url}
+            className={cn(
+              "group flex items-center space-x-3 py-2 px-4 hover:bg-accent hover:text-accent-foreground rounded-md transition-colors duration-200",
+              location.pathname === item.url
+                ? "bg-accent text-accent-foreground"
+                : "text-muted-foreground"
+            )}
+          >
+            <item.icon className="h-4 w-4" />
+            <span>{item.title}</span>
           </Link>
-          <div className="flex items-center gap-2 mt-2">
-            <ConnectionStatus />
-            <NotificationCenter />
-          </div>
-        </SidebarHeader>
-        <SidebarContent>
-          {/* Dashboard Navigation */}
-          <SidebarGroup>
-            <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {navigationItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive(item.url)}
-                      tooltip={item.title}
-                    >
-                      <Link to={item.url}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-          
-          <SidebarSeparator />
-          
-          {/* System Navigation */}
-          <SidebarGroup>
-            <SidebarGroupLabel>System</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {systemItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive(item.url)}
-                      tooltip={item.title}
-                    >
-                      <Link to={item.url}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-          
-          <SidebarSeparator />
-          
-          {/* Trading Tools */}
-          <SidebarGroup>
-            <SidebarGroupLabel>Trading Tools</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {toolItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="w-full">
-                          <SidebarMenuButton
-                            onClick={item.action}
-                            isActive={item.url ? isActive(item.url) : false}
-                            tooltip={item.disabled ? "Configure API keys first" : item.title}
-                            className={cn(
-                              item.disabled && "opacity-50 cursor-not-allowed"
-                            )}
-                          >
-                            {item.disabled && !item.action ? (
-                              <div>
-                                <item.icon className="h-4 w-4" />
-                                <span>{item.title}</span>
-                              </div>
-                            ) : item.action ? (
-                              <div className="flex items-center">
-                                <item.icon className="h-4 w-4" />
-                                <span>{item.title}</span>
-                              </div>
-                            ) : (
-                              <Link to={item.url!}>
-                                <item.icon className="h-4 w-4" />
-                                <span>{item.title}</span>
-                              </Link>
-                            )}
-                          </SidebarMenuButton>
-                        </div>
-                      </TooltipTrigger>
-                      {item.disabled && (
-                        <TooltipContent side="right">
-                          Configure API keys to access this feature
-                        </TooltipContent>
-                      )}
-                    </Tooltip>
-                  </SidebarMenuItem>
-                ))}
-                
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={() => setApiKeyModalOpen(true)}
-                    tooltip="API Keys Configuration"
-                    className={cn(
-                      !apiKeysConfigured && "bg-primary/10 border border-primary/30"
-                    )}
-                  >
-                    <KeyRound className={cn("h-4 w-4", !apiKeysConfigured && "text-primary")} />
-                    <span>API Keys</span>
-                    {!apiKeysConfigured && (
-                      <span className="ml-auto text-xs bg-primary/20 text-primary px-1.5 py-0.5 rounded-full">
-                        Required
-                      </span>
-                    )}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-        
-        <SidebarFooter>
-          <div className="flex items-center justify-between p-4">
-            <ThemeSwitcher />
-            
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-primary/10 text-primary">
-                U
-              </AvatarFallback>
-            </Avatar>
-          </div>
-        </SidebarFooter>
-      </Sidebar>
-      
-      <ApiKeyModal
-        open={apiKeyModalOpen}
-        onOpenChange={setApiKeyModalOpen}
-      />
-      
-      <MarketsModal
-        open={marketsModalOpen}
-        onOpenChange={setMarketsModalOpen}
-      />
-    </>
+        ))}
+      </div>
+      <div className="p-4">
+        <p className="text-xs text-muted-foreground">
+          © {new Date().getFullYear()} Trading App
+        </p>
+      </div>
+    </div>
   );
 }
-
-export default AppSidebar;
