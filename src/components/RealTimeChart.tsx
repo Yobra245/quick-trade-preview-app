@@ -1,13 +1,17 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useRealTimeChart } from '@/hooks/useRealTimeChart';
+import { usePatternRecognition } from '@/hooks/usePatternRecognition';
 import { ChartData } from '@/lib/types';
 import EnhancedChart, { TimeframeType } from './EnhancedChart';
 import LivePriceOverlay from './LivePriceOverlay';
 import VolumeProfile from './VolumeProfile';
 import TechnicalIndicatorsPanel from './TechnicalIndicatorsPanel';
+import DrawingTools from './DrawingTools';
+import PatternAlerts from './PatternAlerts';
+import AdvancedChartControls from './AdvancedChartControls';
 import { Loader2, Wifi, WifiOff, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -18,12 +22,33 @@ interface RealTimeChartProps {
   onIntervalChange?: (interval: TimeframeType) => void;
 }
 
+interface ChartSettings {
+  showGrid: boolean;
+  showCrosshair: boolean;
+  showVolume: boolean;
+  showIndicators: boolean;
+  chartStyle: 'candlestick' | 'line' | 'area';
+  colorScheme: 'dark' | 'light' | 'custom';
+}
+
 const RealTimeChart: React.FC<RealTimeChartProps> = ({
   symbol,
   interval,
   height = 500,
   onIntervalChange
 }) => {
+  const [selectedTool, setSelectedTool] = useState('cursor');
+  const [drawingHistory, setDrawingHistory] = useState<any[]>([]);
+  const [dismissedPatterns, setDismissedPatterns] = useState<string[]>([]);
+  const [chartSettings, setChartSettings] = useState<ChartSettings>({
+    showGrid: true,
+    showCrosshair: true,
+    showVolume: true,
+    showIndicators: true,
+    chartStyle: 'candlestick',
+    colorScheme: 'dark'
+  });
+
   const {
     historicalData,
     currentCandle,
@@ -43,12 +68,9 @@ const RealTimeChart: React.FC<RealTimeChartProps> = ({
     const data = [...historicalData];
     
     if (currentCandle) {
-      // Check if we need to replace the last candle or add a new one
       const lastCandle = data[data.length - 1];
       const timeDiff = currentCandle.timestamp - (lastCandle?.timestamp || 0);
       
-      // If current candle is from the same time period, replace the last one
-      // Otherwise, add as new candle
       if (lastCandle && timeDiff < getIntervalMs(interval)) {
         data[data.length - 1] = currentCandle;
       } else {
@@ -59,11 +81,62 @@ const RealTimeChart: React.FC<RealTimeChartProps> = ({
     return data;
   }, [historicalData, currentCandle, interval]);
 
+  // Pattern recognition
+  const patterns = usePatternRecognition(chartData);
+  const activePatterns = patterns.filter(p => !dismissedPatterns.includes(p.id));
+
   // Get previous price for comparison
   const previousPrice = useMemo(() => {
     if (historicalData.length < 2) return currentPrice;
     return historicalData[historicalData.length - 2]?.close || currentPrice;
   }, [historicalData, currentPrice]);
+
+  // Drawing tools handlers
+  const handleToolSelect = (tool: string) => {
+    setSelectedTool(tool);
+  };
+
+  const handleClearDrawings = () => {
+    setDrawingHistory([]);
+  };
+
+  const handleUndo = () => {
+    setDrawingHistory(prev => prev.slice(0, -1));
+  };
+
+  const handleRedo = () => {
+    // Implement redo logic
+  };
+
+  // Chart controls handlers
+  const handleSettingsChange = (newSettings: Partial<ChartSettings>) => {
+    setChartSettings(prev => ({ ...prev, ...newSettings }));
+  };
+
+  const handleZoomIn = () => {
+    // Implement zoom in logic
+    console.log('Zoom in');
+  };
+
+  const handleZoomOut = () => {
+    // Implement zoom out logic
+    console.log('Zoom out');
+  };
+
+  const handleResetZoom = () => {
+    // Implement reset zoom logic
+    console.log('Reset zoom');
+  };
+
+  const handleToggleFullscreen = () => {
+    // Implement fullscreen toggle
+    console.log('Toggle fullscreen');
+  };
+
+  // Pattern alert handlers
+  const handleDismissPattern = (patternId: string) => {
+    setDismissedPatterns(prev => [...prev, patternId]);
+  };
 
   // Get connection status styling
   const getConnectionBadge = () => {
@@ -100,7 +173,7 @@ const RealTimeChart: React.FC<RealTimeChartProps> = ({
             <CardContent className="flex items-center justify-center" style={{ height: `${height}px` }}>
               <div className="flex flex-col items-center gap-4">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">Loading live chart data...</p>
+                <p className="text-sm text-muted-foreground">Loading professional trading chart...</p>
               </div>
             </CardContent>
           </Card>
@@ -126,7 +199,7 @@ const RealTimeChart: React.FC<RealTimeChartProps> = ({
           <div className="flex flex-col items-center gap-4">
             <AlertCircle className="h-8 w-8 text-destructive" />
             <div className="text-center">
-              <p className="text-sm font-medium">Failed to load chart data</p>
+              <p className="text-sm font-medium">Failed to load professional chart</p>
               <p className="text-xs text-muted-foreground mt-1">{error}</p>
             </div>
           </div>
@@ -139,17 +212,20 @@ const RealTimeChart: React.FC<RealTimeChartProps> = ({
     <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
       {/* Main Chart Area */}
       <div className="lg:col-span-3">
-        <Card className="bg-card border-border relative">
+        <Card className="bg-card border-border relative overflow-hidden">
           <CardHeader className="border-b py-3 px-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <h3 className="font-semibold text-lg">{symbol}</h3>
+                <Badge variant="outline" className="text-xs">
+                  Professional Trading
+                </Badge>
               </div>
               
               <div className="flex items-center gap-2">
                 {getConnectionBadge()}
                 <div className="text-xs text-muted-foreground">
-                  {chartData.length} candles
+                  {chartData.length} candles • {activePatterns.length} patterns
                 </div>
               </div>
             </div>
@@ -164,11 +240,33 @@ const RealTimeChart: React.FC<RealTimeChartProps> = ({
               isConnected={connectionStatus === 'connected'}
             />
             
+            {/* Drawing Tools */}
+            <DrawingTools
+              onToolSelect={handleToolSelect}
+              selectedTool={selectedTool}
+              onClear={handleClearDrawings}
+              onUndo={handleUndo}
+              onRedo={handleRedo}
+              canUndo={drawingHistory.length > 0}
+              canRedo={false}
+            />
+            
+            {/* Advanced Chart Controls */}
+            <AdvancedChartControls
+              settings={chartSettings}
+              onSettingsChange={handleSettingsChange}
+              onZoomIn={handleZoomIn}
+              onZoomOut={handleZoomOut}
+              onResetZoom={handleResetZoom}
+              onToggleFullscreen={handleToggleFullscreen}
+              isFullscreen={false}
+            />
+            
             <EnhancedChart
               data={chartData}
               symbol={symbol}
               height={height}
-              defaultChartType="candle"
+              defaultChartType={chartSettings.chartStyle === 'candlestick' ? 'candle' : chartSettings.chartStyle}
               defaultTimeframe={interval}
               onTimeframeChange={onIntervalChange}
               allowChartTypeChange={true}
@@ -178,7 +276,7 @@ const RealTimeChart: React.FC<RealTimeChartProps> = ({
               colorConfig={{
                 area: { stroke: "#f59e0b", fill: "url(#colorGradient)" },
                 line: { stroke: "#f59e0b" },
-                grid: { stroke: "#1f2937" },
+                grid: { stroke: chartSettings.showGrid ? "#1f2937" : "transparent" },
                 positive: "#22c55e",
                 negative: "#ef4444"
               }}
@@ -187,19 +285,56 @@ const RealTimeChart: React.FC<RealTimeChartProps> = ({
           </CardContent>
           
           {/* Volume Profile */}
-          <div className="border-t">
-            <VolumeProfile data={chartData} height={80} />
-          </div>
+          {chartSettings.showVolume && (
+            <div className="border-t">
+              <VolumeProfile data={chartData} height={80} />
+            </div>
+          )}
         </Card>
       </div>
 
       {/* Side Panel */}
       <div className="space-y-4">
         {/* Technical Indicators Panel */}
-        <TechnicalIndicatorsPanel 
-          data={chartData}
-          currentPrice={currentPrice}
-        />
+        {chartSettings.showIndicators && (
+          <TechnicalIndicatorsPanel 
+            data={chartData}
+            currentPrice={currentPrice}
+          />
+        )}
+        
+        {/* Patterns Summary */}
+        <Card>
+          <CardHeader className="pb-3">
+            <h4 className="text-sm font-semibold">Pattern Analysis</h4>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {activePatterns.length > 0 ? (
+              activePatterns.slice(0, 3).map((pattern) => (
+                <div key={pattern.id} className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">{pattern.name}</span>
+                  <div className="flex items-center gap-1">
+                    <Badge 
+                      variant="secondary" 
+                      className={cn(
+                        "text-[10px]",
+                        pattern.type === 'bullish' && "bg-green-500/10 text-green-500",
+                        pattern.type === 'bearish' && "bg-red-500/10 text-red-500"
+                      )}
+                    >
+                      {pattern.signal}
+                    </Badge>
+                    <span className="font-mono text-[10px]">
+                      {(pattern.confidence * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-xs text-muted-foreground">No patterns detected</p>
+            )}
+          </CardContent>
+        </Card>
         
         {/* Market Stats */}
         <Card>
@@ -231,6 +366,12 @@ const RealTimeChart: React.FC<RealTimeChartProps> = ({
           </CardContent>
         </Card>
       </div>
+
+      {/* Pattern Alerts - Fixed Position */}
+      <PatternAlerts
+        patterns={activePatterns}
+        onDismiss={handleDismissPattern}
+      />
     </div>
   );
 };
