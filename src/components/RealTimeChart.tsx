@@ -1,9 +1,13 @@
+
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useRealTimeChart } from '@/hooks/useRealTimeChart';
 import { ChartData } from '@/lib/types';
 import EnhancedChart, { TimeframeType } from './EnhancedChart';
+import LivePriceOverlay from './LivePriceOverlay';
+import VolumeProfile from './VolumeProfile';
+import TechnicalIndicatorsPanel from './TechnicalIndicatorsPanel';
 import { Loader2, Wifi, WifiOff, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -55,6 +59,12 @@ const RealTimeChart: React.FC<RealTimeChartProps> = ({
     return data;
   }, [historicalData, currentCandle, interval]);
 
+  // Get previous price for comparison
+  const previousPrice = useMemo(() => {
+    if (historicalData.length < 2) return currentPrice;
+    return historicalData[historicalData.length - 2]?.close || currentPrice;
+  }, [historicalData, currentPrice]);
+
   // Get connection status styling
   const getConnectionBadge = () => {
     switch (connectionStatus) {
@@ -82,34 +92,30 @@ const RealTimeChart: React.FC<RealTimeChartProps> = ({
     }
   };
 
-  // Format current price with color indication
-  const formatPrice = (price: number) => {
-    if (!price) return '0.00';
-    
-    // Determine color based on recent price movement
-    const lastHistoricalPrice = historicalData[historicalData.length - 1]?.close || price;
-    const isUp = price >= lastHistoricalPrice;
-    
-    return (
-      <span className={cn(
-        "font-mono font-semibold text-lg",
-        isUp ? "text-green-500" : "text-red-500"
-      )}>
-        ${price.toFixed(2)}
-      </span>
-    );
-  };
-
   if (loading && chartData.length === 0) {
     return (
-      <Card className="bg-card border-border">
-        <CardContent className="flex items-center justify-center" style={{ height: `${height}px` }}>
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">Loading live chart data...</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div className="lg:col-span-3">
+          <Card className="bg-card border-border">
+            <CardContent className="flex items-center justify-center" style={{ height: `${height}px` }}>
+              <div className="flex flex-col items-center gap-4">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm text-muted-foreground">Loading live chart data...</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="space-y-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="animate-pulse space-y-2">
+                <div className="h-4 bg-accent rounded w-3/4"></div>
+                <div className="h-6 bg-accent rounded w-1/2"></div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     );
   }
 
@@ -130,58 +136,102 @@ const RealTimeChart: React.FC<RealTimeChartProps> = ({
   }
 
   return (
-    <Card className="bg-card border-border">
-      <CardHeader className="border-b py-3 px-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <h3 className="font-semibold text-lg">{symbol}</h3>
-            {formatPrice(currentPrice)}
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {getConnectionBadge()}
-            <div className="text-xs text-muted-foreground">
-              {chartData.length} candles
-            </div>
-          </div>
-        </div>
-      </CardHeader>
-      
-      <CardContent className="p-0">
-        <EnhancedChart
-          data={chartData}
-          symbol={symbol}
-          height={height}
-          defaultChartType="candle"
-          defaultTimeframe={interval}
-          onTimeframeChange={onIntervalChange}
-          allowChartTypeChange={true}
-          allowTimeframeChange={true}
-          allowZoom={true}
-          allowDownload={true}
-          colorConfig={{
-            area: { stroke: "#f59e0b", fill: "url(#colorGradient)" },
-            line: { stroke: "#f59e0b" },
-            grid: { stroke: "#1f2937" },
-            positive: "#22c55e",
-            negative: "#ef4444"
-          }}
-          valueFormatter={(value: number) => `$${value.toFixed(2)}`}
-        />
-        
-        {/* Live price overlay */}
-        {connectionStatus === 'connected' && currentPrice > 0 && (
-          <div className="absolute top-1/2 right-4 transform -translate-y-1/2 pointer-events-none">
-            <div className="bg-primary/10 border border-primary/20 rounded-lg px-3 py-2 backdrop-blur-sm">
-              <div className="text-xs text-muted-foreground">Live Price</div>
-              <div className="font-mono font-bold text-primary">
-                ${currentPrice.toFixed(2)}
+    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+      {/* Main Chart Area */}
+      <div className="lg:col-span-3">
+        <Card className="bg-card border-border relative">
+          <CardHeader className="border-b py-3 px-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <h3 className="font-semibold text-lg">{symbol}</h3>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                {getConnectionBadge()}
+                <div className="text-xs text-muted-foreground">
+                  {chartData.length} candles
+                </div>
               </div>
             </div>
+          </CardHeader>
+          
+          <CardContent className="p-0 relative">
+            {/* Live Price Overlay */}
+            <LivePriceOverlay
+              price={currentPrice}
+              previousPrice={previousPrice}
+              symbol={symbol}
+              isConnected={connectionStatus === 'connected'}
+            />
+            
+            <EnhancedChart
+              data={chartData}
+              symbol={symbol}
+              height={height}
+              defaultChartType="candle"
+              defaultTimeframe={interval}
+              onTimeframeChange={onIntervalChange}
+              allowChartTypeChange={true}
+              allowTimeframeChange={true}
+              allowZoom={true}
+              allowDownload={true}
+              colorConfig={{
+                area: { stroke: "#f59e0b", fill: "url(#colorGradient)" },
+                line: { stroke: "#f59e0b" },
+                grid: { stroke: "#1f2937" },
+                positive: "#22c55e",
+                negative: "#ef4444"
+              }}
+              valueFormatter={(value: number) => `$${value.toFixed(2)}`}
+            />
+          </CardContent>
+          
+          {/* Volume Profile */}
+          <div className="border-t">
+            <VolumeProfile data={chartData} height={80} />
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </Card>
+      </div>
+
+      {/* Side Panel */}
+      <div className="space-y-4">
+        {/* Technical Indicators Panel */}
+        <TechnicalIndicatorsPanel 
+          data={chartData}
+          currentPrice={currentPrice}
+        />
+        
+        {/* Market Stats */}
+        <Card>
+          <CardHeader className="pb-3">
+            <h4 className="text-sm font-semibold">Market Stats</h4>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">24h Volume</span>
+              <span className="font-mono">
+                {chartData.length > 0 ? 
+                  `${(chartData.reduce((sum, c) => sum + c.volume, 0) / 1000000).toFixed(2)}M` 
+                  : '0.00M'
+                }
+              </span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">24h High</span>
+              <span className="font-mono text-green-500">
+                ${chartData.length > 0 ? Math.max(...chartData.map(c => c.high)).toFixed(2) : '0.00'}
+              </span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">24h Low</span>
+              <span className="font-mono text-red-500">
+                ${chartData.length > 0 ? Math.min(...chartData.map(c => c.low)).toFixed(2) : '0.00'}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 };
 

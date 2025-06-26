@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import RealTimeChart from './RealTimeChart';
@@ -54,11 +54,11 @@ const TradingView: React.FC<TradingViewProps> = ({
   return (
     <div className={cn(
       "w-full h-full bg-background",
-      isFullscreen && "fixed inset-0 z-50 bg-black",
+      isFullscreen && "fixed inset-0 z-50 bg-black p-4",
       className
     )}>
       {/* Top toolbar */}
-      <div className="flex items-center justify-between p-4 border-b bg-card">
+      <div className="flex items-center justify-between p-4 border-b bg-card rounded-t-lg">
         <div className="flex items-center gap-4">
           {/* Symbol selector */}
           <div className="flex items-center gap-2">
@@ -79,20 +79,20 @@ const TradingView: React.FC<TradingViewProps> = ({
 
           {/* Quick intervals */}
           <div className="flex items-center gap-1 bg-accent/50 rounded-md p-1">
-            {quickIntervals.map(interval => (
+            {quickIntervals.map(intervalOption => (
               <Button
-                key={interval}
+                key={intervalOption}
                 variant="ghost"
                 size="sm"
                 className={cn(
                   "px-2 py-1 text-xs h-6",
-                  currentInterval === interval 
+                  currentInterval === intervalOption 
                     ? "bg-primary text-primary-foreground" 
                     : "text-muted-foreground hover:text-foreground"
                 )}
-                onClick={() => setCurrentInterval(interval)}
+                onClick={() => setCurrentInterval(intervalOption)}
               >
-                {interval}
+                {intervalOption}
               </Button>
             ))}
           </div>
@@ -100,7 +100,7 @@ const TradingView: React.FC<TradingViewProps> = ({
 
         <div className="flex items-center gap-2">
           {/* Trading indicators */}
-          <div className="flex items-center gap-4 text-sm">
+          <div className="hidden md:flex items-center gap-4 text-sm">
             <div className="flex items-center gap-1 text-muted-foreground">
               <TrendingUp className="w-4 h-4" />
               <span>24h: +2.34%</span>
@@ -142,17 +142,17 @@ const TradingView: React.FC<TradingViewProps> = ({
       </div>
 
       {/* Main chart area */}
-      <div className="flex-1 p-4">
+      <div className="p-4 bg-card rounded-b-lg">
         <RealTimeChart
           symbol={selectedSymbol}
           interval={currentInterval}
-          height={isFullscreen ? window.innerHeight - 200 : 600}
+          height={isFullscreen ? window.innerHeight - 250 : 600}
           onIntervalChange={setCurrentInterval}
         />
       </div>
 
       {/* Bottom status bar */}
-      <div className="flex items-center justify-between px-4 py-2 border-t bg-card text-xs text-muted-foreground">
+      <div className="flex items-center justify-between px-4 py-2 border-t bg-card text-xs text-muted-foreground mt-4 rounded-lg">
         <div className="flex items-center gap-4">
           <span>Market Status: Open</span>
           <span>Last Update: {new Date().toLocaleTimeString()}</span>
