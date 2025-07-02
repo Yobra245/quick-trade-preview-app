@@ -27,6 +27,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const checkApiKeys = async () => {
     if (!user) {
       setApiKeysConfigured(false);
+      // For demo purposes, initialize data service with mock user
+      await dataService.initialize('demo-user');
       return;
     }
 
@@ -47,6 +49,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (error) {
       console.error('Error checking API keys:', error);
       setApiKeysConfigured(false);
+      // Fallback to demo mode
+      await dataService.initialize('demo-user');
     }
   };
 
@@ -62,6 +66,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     if (user) {
       dataService.initialize(user.id);
+    } else {
+      // For demo purposes, always initialize with demo user
+      dataService.initialize('demo-user');
     }
   }, [user]);
 
